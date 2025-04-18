@@ -443,15 +443,42 @@
         function loadOrders() {
             try {
                 const allOrders = Orders.getAll();
+                console.log('Все заказы:', allOrders); // Логируем все заказы
+                
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); // Устанавливаем начало дня
+                today.setHours(0, 0, 0, 0);
+                console.log('Сегодняшняя дата:', today); // Логируем сегодняшнюю дату
                 
                 // Фильтруем заказы по дате
                 const todayOrders = allOrders.filter(order => {
-                    const orderDate = new Date(order.timestamp * 1000);
-                    orderDate.setHours(0, 0, 0, 0);
-                    return orderDate.getTime() === today.getTime();
+                    try {
+                        // Получаем timestamp из объекта заказа или из ID
+                        let timestamp;
+                        if (order.timestamp) {
+                            timestamp = order.timestamp;
+                        } else {
+                            const idStr = String(order.id);
+                            if (idStr.includes('_')) {
+                                const parts = idStr.split('_');
+                                timestamp = parseInt(parts[parts.length - 1]);
+                            } else {
+                                timestamp = parseInt(idStr);
+                            }
+                        }
+                        
+                        const orderDate = new Date(timestamp * 1000);
+                        orderDate.setHours(0, 0, 0, 0);
+                        
+                        console.log('Дата заказа:', orderDate, 'ID:', order.id, 'Timestamp:', timestamp); // Логируем дату заказа
+                        
+                        return orderDate.getTime() === today.getTime();
+                    } catch (error) {
+                        console.error('Ошибка при обработке заказа:', error, order);
+                        return false;
+                    }
                 });
+                
+                console.log('Сегодняшние заказы:', todayOrders); // Логируем отфильтрованные заказы
                 
                 const filteredOrders = currentFilter === 'all' 
                     ? todayOrders 
