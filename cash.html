@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Касса - Отчет за период</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="lib/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .report-card {
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            background: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .report-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--bs-border-color);
+            background: rgba(0,0,0,0.02);
+            border-radius: 15px 15px 0 0;
+        }
+        .report-body {
+            padding: 15px;
+        }
+        .report-footer {
+            padding: 15px;
+            border-top: 1px solid var(--bs-border-color);
+            background: rgba(0,0,0,0.02);
+            border-radius: 0 0 15px 15px;
+        }
+        .date-range-picker {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .date-range-picker input {
+            border-radius: 25px;
+            padding: 8px 15px;
+            border: 1px solid var(--bs-border-color);
+        }
+        .btn-filter {
+            border-radius: 25px;
+            padding: 8px 20px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-filter:hover {
+            transform: translateY(-2px);
+        }
+        .stat-card {
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: white;
+        }
+        .table-responsive {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table th {
+            background: rgba(0,0,0,0.02);
+            font-weight: 500;
+        }
+        .table td, .table th {
+            padding: 12px 15px;
+        }
+        .chart-container {
+            height: 300px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .chart-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--bs-secondary);
+        }
+        .chart-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            .date-range-picker {
+                flex-direction: column;
+            }
+            .date-range-picker input, .date-range-picker button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <div class="wrapper">
+        <div class="container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Касса - Отчет за период</h1>
+            </div>
+            
+            <div class="report-card mb-4">
+                <div class="report-header">
+                    <h5 class="mb-0">Выбор периода</h5>
+                </div>
+                <div class="report-body">
+                    <div class="date-range-picker">
+                        <input type="date" id="start-date" class="form-control">
+                        <input type="date" id="end-date" class="form-control">
+                        <button id="filter-btn" class="btn btn-primary btn-filter">
+                            <i class="bi bi-funnel"></i> Применить фильтр
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card bg-primary text-white">
+                        <div class="stat-icon">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div class="stat-value" id="total-revenue">0 TMT</div>
+                        <div class="stat-label">Общая выручка</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-success text-white">
+                        <div class="stat-icon">
+                            <i class="bi bi-cart-check"></i>
+                        </div>
+                        <div class="stat-value" id="total-orders">0</div>
+                        <div class="stat-label">Всего заказов</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-info text-white">
+                        <div class="stat-icon">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                        <div class="stat-value" id="average-order">0 TMT</div>
+                        <div class="stat-label">Средний чек</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-warning text-white">
+                        <div class="stat-icon">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="stat-value" id="completed-orders">0</div>
+                        <div class="stat-label">Завершенные заказы</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="report-card">
+                        <div class="report-header">
+                            <h5 class="mb-0">Статистика по дням</h5>
+                        </div>
+                        <div class="report-body">
+                            <div class="chart-container" id="daily-chart">
+                                <div class="chart-placeholder">
+                                    <i class="bi bi-bar-chart"></i>
+                                    <p>График загрузки...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="report-card">
+                        <div class="report-header">
+                            <h5 class="mb-0">Популярные позиции</h5>
+                        </div>
+                        <div class="report-body">
+                            <div class="chart-container" id="popular-items-chart">
+                                <div class="chart-placeholder">
+                                    <i class="bi bi-pie-chart"></i>
+                                    <p>График загрузки...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="report-card">
+                <div class="report-header">
+                    <h5 class="mb-0">Детализация заказов</h5>
+                </div>
+                <div class="report-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>№</th>
+                                    <th>Дата</th>
+                                    <th>Статус</th>
+                                    <th>Позиции</th>
+                                    <th>Комментарий</th>
+                                    <th>Сумма</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table-body">
+                                <!-- Здесь будут строки с заказами -->
+                                <tr>
+                                    <td colspan="6" class="text-center">Выберите период для отображения заказов</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="report-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted">Показано: </span>
+                            <span id="shown-orders">0</span>
+                            <span class="text-muted"> из </span>
+                            <span id="total-filtered-orders">0</span>
+                        </div>
+                        <button id="export-btn" class="btn btn-outline-primary" disabled>
+                            <i class="bi bi-download"></i> Экспорт в Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="lib/chartjs/chart.js"></script>
+    <script>
+        // Глобальные переменные для графиков
+        let dailyChart = null;
+        let popularItemsChart = null;
+        let chartJsLoaded = false;
+        
+        // Проверка загрузки Chart.js
+        function checkChartJsLoaded() {
+            if (typeof Chart !== 'undefined') {
+                chartJsLoaded = true;
+                console.log('Chart.js успешно загружен');
+                return true;
+            }
+            return false;
+        }
+        
+        // Устанавливаем начальные даты (текущий месяц)
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            document.getElementById('start-date').value = formatDateForInput(firstDay);
+            document.getElementById('end-date').value = formatDateForInput(lastDay);
+            
+            // Проверяем загрузку Chart.js
+            if (checkChartJsLoaded()) {
+                // Загружаем данные при загрузке страницы
+                loadReportData();
+            } else {
+                console.error('Chart.js не загружен. Попытка загрузки через 1 секунду...');
+                setTimeout(function() {
+                    if (checkChartJsLoaded()) {
+                        loadReportData();
+                    } else {
+                        console.error('Не удалось загрузить Chart.js. Графики будут недоступны.');
+                        document.querySelectorAll('.chart-container').forEach(container => {
+                            container.innerHTML = `
+                                <div class="chart-placeholder">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <p>Не удалось загрузить библиотеку графиков</p>
+                                </div>
+                            `;
+                        });
+                    }
+                }, 1000);
+            }
+            
+            // Обработчик кнопки фильтра
+            document.getElementById('filter-btn').addEventListener('click', loadReportData);
+        });
+        
+        // Форматирование даты для input type="date"
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Форматирование даты для отображения
+        function formatDate(date) {
+            return date.toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+        
+        // Форматирование времени
+        function formatTime(date) {
+            return date.toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Форматирование суммы
+        function formatMoney(amount) {
+            return amount.toLocaleString('ru-RU', {
+                style: 'currency',
+                currency: 'TMT',
+                minimumFractionDigits: 0
+            });
+        }
+        
+        // Получение текста статуса
+        function getStatusText(status) {
+            const statusMap = {
+                'new': 'Новый',
+                'preparing': 'Готовится',
+                'ready': 'Готов',
+                'completed': 'Завершён'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // Загрузка данных отчета
+        async function loadReportData() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            
+            if (!startDate || !endDate) {
+                alert('Пожалуйста, выберите период');
+                return;
+            }
+            
+            try {
+                // Загружаем заказы
+                const response = await fetch('get_orders.php');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (!Array.isArray(data)) {
+                    throw new Error('Полученные данные не являются массивом');
+                }
+                
+                // Фильтруем заказы по выбранному периоду
+                const startTimestamp = new Date(startDate).getTime() / 1000;
+                const endTimestamp = new Date(endDate + 'T23:59:59').getTime() / 1000;
+                
+                const filteredOrders = data.filter(order => {
+                    return order.timestamp >= startTimestamp && order.timestamp <= endTimestamp;
+                });
+                
+                // Обновляем статистику
+                updateStatistics(filteredOrders);
+                
+                // Обновляем графики только если Chart.js загружен
+                if (chartJsLoaded) {
+                    updateCharts(filteredOrders);
+                }
+                
+                // Обновляем таблицу заказов
+                updateOrdersTable(filteredOrders);
+                
+                // Включаем кнопку экспорта
+                document.getElementById('export-btn').disabled = false;
+                
+            } catch (error) {
+                console.error('Ошибка при загрузке данных:', error);
+                
+                // Показываем сообщение об ошибке в таблице
+                const tableBody = document.getElementById('orders-table-body');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Ошибка при загрузке данных: ${error.message}
+                        </td>
+                    </tr>
+                `;
+                
+                // Сбрасываем статистику
+                document.getElementById('total-revenue').textContent = '0 TMT';
+                document.getElementById('total-orders').textContent = '0';
+                document.getElementById('average-order').textContent = '0 TMT';
+                document.getElementById('completed-orders').textContent = '0';
+                document.getElementById('shown-orders').textContent = '0';
+                document.getElementById('total-filtered-orders').textContent = '0';
+                
+                // Отключаем кнопку экспорта
+                document.getElementById('export-btn').disabled = true;
+            }
+        }
+        
+        // Обновление статистики
+        function updateStatistics(orders) {
+            // Общая выручка
+            const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+            document.getElementById('total-revenue').textContent = formatMoney(totalRevenue);
+            
+            // Всего заказов
+            document.getElementById('total-orders').textContent = orders.length;
+            
+            // Средний чек
+            const averageOrder = orders.length > 0 ? totalRevenue / orders.length : 0;
+            document.getElementById('average-order').textContent = formatMoney(averageOrder);
+            
+            // Завершенные заказы
+            const completedOrders = orders.filter(order => order.status === 'completed').length;
+            document.getElementById('completed-orders').textContent = completedOrders;
+            
+            // Обновляем счетчики в футере
+            document.getElementById('shown-orders').textContent = orders.length;
+            document.getElementById('total-filtered-orders').textContent = orders.length;
+        }
+        
+        // Обновление графиков
+        function updateCharts(orders) {
+            // График статистики по дням
+            updateDailyChart(orders);
+            
+            // График популярных позиций
+            updatePopularItemsChart(orders);
+        }
+        
+        // Обновление графика статистики по дням
+        function updateDailyChart(orders) {
+            // Проверяем, что Chart.js загружен
+            if (!chartJsLoaded) {
+                console.error('Chart.js не загружен. Невозможно создать график.');
+                return;
+            }
+            
+            // Группируем заказы по дням
+            const dailyData = {};
+            
+            orders.forEach(order => {
+                const date = new Date(order.timestamp * 1000);
+                const dateKey = formatDateForInput(date);
+                
+                if (!dailyData[dateKey]) {
+                    dailyData[dateKey] = {
+                        revenue: 0,
+                        count: 0
+                    };
+                }
+                
+                dailyData[dateKey].revenue += order.total;
+                dailyData[dateKey].count += 1;
+            });
+            
+            // Сортируем даты
+            const sortedDates = Object.keys(dailyData).sort();
+            
+            // Подготавливаем данные для графика
+            const labels = sortedDates.map(date => {
+                const [year, month, day] = date.split('-');
+                return `${day}.${month}`;
+            });
+            
+            const revenueData = sortedDates.map(date => dailyData[date].revenue);
+            const countData = sortedDates.map(date => dailyData[date].count);
+            
+            // Создаем или обновляем график
+            const chartContainer = document.getElementById('daily-chart');
+            
+            // Очищаем контейнер перед созданием нового графика
+            chartContainer.innerHTML = '';
+            
+            // Создаем новый canvas элемент
+            const canvas = document.createElement('canvas');
+            chartContainer.appendChild(canvas);
+            
+            if (dailyChart) {
+                dailyChart.destroy();
+            }
+            
+            try {
+                dailyChart = new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Выручка (TMT)',
+                                data: revenueData,
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Количество заказов',
+                                data: countData,
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1,
+                                yAxisID: 'y1',
+                                type: 'line'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Выручка (TMT)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Количество заказов'
+                                },
+                                grid: {
+                                    drawOnChartArea: false
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Ошибка при создании графика:', error);
+                chartContainer.innerHTML = `
+                    <div class="chart-placeholder">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <p>Ошибка при создании графика: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Обновление графика популярных позиций
+        function updatePopularItemsChart(orders) {
+            // Проверяем, что Chart.js загружен
+            if (!chartJsLoaded) {
+                console.error('Chart.js не загружен. Невозможно создать график.');
+                return;
+            }
+            
+            // Подсчитываем количество каждого товара
+            const itemCounts = {};
+            
+            orders.forEach(order => {
+                order.items.forEach(item => {
+                    if (!itemCounts[item.name]) {
+                        itemCounts[item.name] = 0;
+                    }
+                    itemCounts[item.name] += item.quantity;
+                });
+            });
+            
+            // Сортируем товары по количеству
+            const sortedItems = Object.entries(itemCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10); // Берем только топ-10
+            
+            // Подготавливаем данные для графика
+            const labels = sortedItems.map(item => item[0]);
+            const data = sortedItems.map(item => item[1]);
+            
+            // Создаем или обновляем график
+            const chartContainer = document.getElementById('popular-items-chart');
+            
+            // Очищаем контейнер перед созданием нового графика
+            chartContainer.innerHTML = '';
+            
+            // Создаем новый canvas элемент
+            const canvas = document.createElement('canvas');
+            chartContainer.appendChild(canvas);
+            
+            if (popularItemsChart) {
+                popularItemsChart.destroy();
+            }
+            
+            try {
+                popularItemsChart = new Chart(canvas, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.7)',
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)',
+                                'rgba(153, 102, 255, 0.7)',
+                                'rgba(255, 159, 64, 0.7)',
+                                'rgba(199, 199, 199, 0.7)',
+                                'rgba(83, 102, 255, 0.7)',
+                                'rgba(255, 99, 255, 0.7)',
+                                'rgba(0, 162, 162, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)',
+                                'rgba(255, 159, 64, 1)',
+                                'rgba(199, 199, 199, 1)',
+                                'rgba(83, 102, 255, 1)',
+                                'rgba(255, 99, 255, 1)',
+                                'rgba(0, 162, 162, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 15,
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Ошибка при создании графика:', error);
+                chartContainer.innerHTML = `
+                    <div class="chart-placeholder">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <p>Ошибка при создании графика: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Обновление таблицы заказов
+        function updateOrdersTable(orders) {
+            const tableBody = document.getElementById('orders-table-body');
+            tableBody.innerHTML = '';
+            
+            if (orders.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center">Заказы за выбранный период не найдены</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Сортируем заказы по времени (новые сверху)
+            orders.sort((a, b) => b.timestamp - a.timestamp);
+            
+            orders.forEach((order, index) => {
+                const orderDate = new Date(order.timestamp * 1000);
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${formatDate(orderDate)} ${formatTime(orderDate)}</td>
+                    <td><span class="badge bg-${getStatusBadgeClass(order.status)}">${getStatusText(order.status)}</span></td>
+                    <td>${order.items.length} позиций</td>
+                    <td>${order.comment || '-'}</td>
+                    <td>${formatMoney(order.total)}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Получение класса для бейджа статуса
+        function getStatusBadgeClass(status) {
+            const statusClassMap = {
+                'new': 'warning',
+                'preparing': 'info',
+                'ready': 'success',
+                'completed': 'secondary'
+            };
+            return statusClassMap[status] || 'primary';
+        }
+        
+        // Экспорт в Excel
+        document.getElementById('export-btn').addEventListener('click', function() {
+            alert('Функция экспорта в Excel будет добавлена в следующем обновлении');
+        });
+    </script>
+</body>
+</html> 
