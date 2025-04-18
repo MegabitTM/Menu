@@ -442,6 +442,8 @@
                             if (idStr.includes('_')) {
                                 const parts = idStr.split('_');
                                 timestamp = parseInt(parts[parts.length - 1]);
+                            } else if (idStr.length === 13) {
+                                timestamp = Math.floor(parseInt(idStr) / 1000);
                             } else {
                                 timestamp = parseInt(idStr);
                             }
@@ -525,6 +527,8 @@
                             if (idStr.includes('_')) {
                                 const parts = idStr.split('_');
                                 timestamp = parseInt(parts[parts.length - 1]);
+                            } else if (idStr.length === 13) {
+                                timestamp = Math.floor(parseInt(idStr) / 1000);
                             } else {
                                 timestamp = parseInt(idStr);
                             }
@@ -606,13 +610,13 @@
                     if (order.timestamp) {
                         timestamp = order.timestamp;
                     } else {
-                        // Преобразуем ID в строку и проверяем формат
                         const idStr = String(order.id);
                         if (idStr.includes('_')) {
                             const parts = idStr.split('_');
                             timestamp = parseInt(parts[parts.length - 1]);
+                        } else if (idStr.length === 13) {
+                            timestamp = Math.floor(parseInt(idStr) / 1000);
                         } else {
-                            // Если ID не содержит подчеркиваний, используем его как timestamp
                             timestamp = parseInt(idStr);
                         }
                     }
@@ -637,23 +641,23 @@
                             <span class="order-id">Заказ №${orderCounter}</span>
                             <span class="order-date">${orderDate.toLocaleString('ru-RU')}</span>
                             <span class="order-status">${getStatusText(order.status)}</span>
-                    </div>
+                        </div>
                         <div class="order-items">
-                        ${order.items.map(item => `
+                            ${order.items.map(item => `
                                 <div class="order-item-detail">
                                     <span>${item.name} x${item.quantity}</span>
                                     <span>${item.price * item.quantity} TMT</span>
-                            </div>
-                        `).join('')}
-                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                         <div class="order-footer">
                             <div class="order-total">Итого: ${order.total} TMT</div>
                             ${order.comment ? `<div class="order-comment">Комментарий: ${order.comment}</div>` : ''}
                             <div class="order-actions">
                                 ${getStatusButtons(order.status, order.id)}
-                    </div>
-                </div>
-            `;
+                            </div>
+                        </div>
+                    `;
                     ordersContainer.appendChild(orderElement);
                     orderCounter++;
                 } catch (error) {
