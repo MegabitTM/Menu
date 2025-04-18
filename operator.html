@@ -250,12 +250,41 @@
         <div class="container py-4">
             <h1 class="mb-4">Операторская панель</h1>
             
-            <div class="filter-buttons">
-                <button class="btn btn-outline-warning" data-status="new">Новые</button>
-                <button class="btn btn-outline-info" data-status="preparing">Готовятся</button>
-                <button class="btn btn-outline-success" data-status="ready">Готовы</button>
-                <button class="btn btn-outline-secondary" data-status="completed">Завершённые</button>
-                <button class="btn btn-outline-primary" data-status="all">Все заказы</button>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-label">Всего заказов</div>
+                    <div class="stat-value" id="total-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Новые</div>
+                    <div class="stat-value" id="new-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">В работе</div>
+                    <div class="stat-value" id="in-progress-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Завершено</div>
+                    <div class="stat-value" id="completed-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Отменено</div>
+                    <div class="stat-value" id="cancelled-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Общая сумма</div>
+                    <div class="stat-value" id="total-amount">0 TMT</div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="filter-buttons">
+                    <button class="btn btn-outline-warning" data-status="new">Новые</button>
+                    <button class="btn btn-outline-info" data-status="preparing">Готовятся</button>
+                    <button class="btn btn-outline-success" data-status="ready">Готовы</button>
+                    <button class="btn btn-outline-secondary" data-status="completed">Завершённые</button>
+                    <button class="btn btn-outline-primary" data-status="all">Все заказы</button>
+                </div>
             </div>
 
             <div id="orders-container" class="row"></div>
@@ -349,21 +378,56 @@
             });
         }
 
-        // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', function() {
-            loadOrders();
-            setupEventListeners();
-        });
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Обработчик фильтрации заказов
+            document.querySelectorAll('.filter-buttons button').forEach(button => {
+                button.addEventListener('click', () => {
+                    currentFilter = button.dataset.status;
+                    localStorage.setItem('operatorFilter', currentFilter);
+                    updateActiveFilterButton();
+                    loadOrders();
+                });
+            });
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            try {
+                const stats = Orders.getStats();
+                const elements = {
+                    'total-orders': stats.total,
+                    'new-orders': stats.new,
+                    'in-progress-orders': stats.inProgress,
+                    'completed-orders': stats.completed,
+                    'cancelled-orders': stats.cancelled,
+                    'total-amount': stats.totalAmount.toFixed(2) + ' TMT'
+                };
+
+                Object.entries(elements).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
+            } catch (error) {
+                console.error('Ошибка при обновлении статистики:', error);
+            }
+        }
 
         // Загрузка заказов
         function loadOrders() {
             try {
-                const orders = Orders.getAll();
-                displayOrders(orders);
+                const allOrders = Orders.getAll();
+                const filteredOrders = currentFilter === 'all' 
+                    ? allOrders 
+                    : allOrders.filter(order => order.status === currentFilter);
+                
+                displayOrders(filteredOrders);
                 updateStats();
+                updateActiveFilterButton();
             } catch (error) {
                 console.error('Ошибка при загрузке заказов:', error);
-                alert('Ошибка при загрузке заказов: ' + error.message);
             }
         }
 
@@ -450,41 +514,14 @@
             }
         }
 
-        // Обновление статистики
-        function updateStats() {
-            const stats = Orders.getStats();
-            document.getElementById('total-orders').textContent = stats.total;
-            document.getElementById('new-orders').textContent = stats.new;
-            document.getElementById('in-progress-orders').textContent = stats.inProgress;
-            document.getElementById('completed-orders').textContent = stats.completed;
-            document.getElementById('cancelled-orders').textContent = stats.cancelled;
-            document.getElementById('total-amount').textContent = stats.totalAmount.toFixed(2) + ' TMT';
-        }
-
-        // Настройка обработчиков событий
-        function setupEventListeners() {
-            // Обработчик обновления страницы
-            document.getElementById('refresh-btn').addEventListener('click', loadOrders);
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadOrders();
             
-            // Обработчик фильтрации заказов
-            document.getElementById('status-filter').addEventListener('change', function() {
-                const status = this.value;
-                const orders = status === 'all' ? Orders.getAll() : Orders.getByStatus(status);
-                displayOrders(orders);
-            });
-        }
-
-        document.querySelectorAll('.filter-buttons button').forEach(button => {
-            button.addEventListener('click', () => {
-                currentFilter = button.dataset.status;
-                localStorage.setItem('operatorFilter', currentFilter);
-                updateActiveFilterButton();
-                displayOrders();
-            });
+            // Автоматическое обновление каждые 5 секунд
+            setInterval(loadOrders, 5000);
         });
-
-        // Автоматическое обновление каждые 5 секунд
-        setInterval(loadOrders, 5000);
     </script>
 </body>
 </html> 
