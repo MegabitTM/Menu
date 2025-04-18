@@ -302,13 +302,14 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="filter-buttons">
-                <button class="btn btn-outline-warning" data-status="new">Новые</button>
-                <button class="btn btn-outline-info" data-status="preparing">Готовятся</button>
-                <button class="btn btn-outline-success" data-status="ready">Готовы</button>
-                <button class="btn btn-outline-secondary" data-status="completed">Завершённые</button>
-                <button class="btn btn-outline-primary" data-status="all">Все заказы</button>
+                <div class="filter-buttons">
+                    <button class="btn btn-outline-warning" data-status="new">Новые</button>
+                    <button class="btn btn-outline-info" data-status="preparing">Готовятся</button>
+                    <button class="btn btn-outline-success" data-status="ready">Готовы</button>
+                    <button class="btn btn-outline-secondary" data-status="completed">Завершённые</button>
+                    <button class="btn btn-outline-primary" data-status="all">Все заказы</button>
                 </div>
+                <button class="btn btn-danger" onclick="deleteAllOrders()">Удалить все заказы</button>
             </div>
 
             <div id="orders-container" class="row"></div>
@@ -807,6 +808,20 @@
                 'cancelled': 'Отменен'
             };
             return statusMap[status] || status;
+        }
+
+        // Функция для удаления всех заказов
+        function deleteAllOrders() {
+            if (confirm('Вы уверены, что хотите удалить все заказы? Это действие нельзя отменить.')) {
+                try {
+                    localStorage.removeItem('orders');
+                    showNotification('Все заказы успешно удалены');
+                    loadOrders(); // Обновляем отображение
+                } catch (error) {
+                    console.error('Ошибка при удалении заказов:', error);
+                    showNotification('Ошибка при удалении заказов', 'error');
+                }
+            }
         }
 
         // Инициализация при загрузке страницы
