@@ -443,9 +443,19 @@
         function loadOrders() {
             try {
                 const allOrders = Orders.getAll();
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Устанавливаем начало дня
+                
+                // Фильтруем заказы по дате
+                const todayOrders = allOrders.filter(order => {
+                    const orderDate = new Date(order.timestamp * 1000);
+                    orderDate.setHours(0, 0, 0, 0);
+                    return orderDate.getTime() === today.getTime();
+                });
+                
                 const filteredOrders = currentFilter === 'all' 
-                    ? allOrders 
-                    : allOrders.filter(order => order.status === currentFilter);
+                    ? todayOrders 
+                    : todayOrders.filter(order => order.status === currentFilter);
                 
                 displayOrders(filteredOrders);
                 updateStats();
