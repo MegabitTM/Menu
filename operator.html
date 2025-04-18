@@ -593,6 +593,8 @@
             const sortedOrders = [...orders].sort((a, b) => {
                 if (a.status === 'new' && b.status !== 'new') return -1;
                 if (a.status !== 'new' && b.status === 'new') return 1;
+                if (a.status === 'preparing' && b.status !== 'preparing') return -1;
+                if (a.status !== 'preparing' && b.status === 'preparing') return 1;
                 return b.timestamp - a.timestamp; // Сортируем по timestamp
             });
 
