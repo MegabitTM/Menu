@@ -666,57 +666,82 @@
             });
         }
 
+        // Обновление статуса заказа
+        function updateOrderStatus(orderId, newStatus) {
+            try {
+                console.log('Обновление статуса заказа:', { orderId, newStatus });
+                
+                // Проверяем, что orderId является строкой
+                if (typeof orderId !== 'string') {
+                    orderId = String(orderId);
+                }
+                
+                // Проверяем, что заказ существует
+                const allOrders = Orders.getAll();
+                const order = allOrders.find(o => String(o.id) === orderId);
+                
+                if (!order) {
+                    console.error('Заказ не найден:', orderId);
+                    showNotification('Заказ не найден', 'error');
+                    return;
+                }
+                
+                console.log('Найден заказ:', order);
+                
+                // Обновляем статус
+                if (Orders.updateStatus(orderId, newStatus)) {
+                    console.log('Статус успешно обновлен');
+                    // Обновляем отображение заказов
+                    loadOrders();
+                    // Показываем уведомление об успешном обновлении
+                    showNotification(`Статус заказа успешно изменен на "${getStatusText(newStatus)}"`);
+                } else {
+                    console.error('Ошибка при вызове Orders.updateStatus');
+                    showNotification('Ошибка при обновлении статуса заказа', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка при обновлении статуса заказа:', error);
+                showNotification('Ошибка при обновлении статуса заказа: ' + error.message, 'error');
+            }
+        }
+
         // Получение кнопок для статуса
         function getStatusButtons(status, orderId) {
             const buttons = [];
             
+            // Преобразуем orderId в строку
+            const orderIdStr = String(orderId);
+            
             if (status === 'new') {
                 buttons.push(`
-                    <button onclick="updateOrderStatus('${orderId}', 'preparing')" class="btn btn-primary">
+                    <button onclick="updateOrderStatus('${orderIdStr}', 'preparing')" class="btn btn-primary">
                         Взять в работу
                     </button>
-                    <button onclick="updateOrderStatus('${orderId}', 'cancelled')" class="btn btn-danger">
+                    <button onclick="updateOrderStatus('${orderIdStr}', 'cancelled')" class="btn btn-danger">
                         Отменить
                     </button>
                 `);
             } else if (status === 'preparing') {
                 buttons.push(`
-                    <button onclick="updateOrderStatus('${orderId}', 'ready')" class="btn btn-success">
+                    <button onclick="updateOrderStatus('${orderIdStr}', 'ready')" class="btn btn-success">
                         Готов
                     </button>
-                    <button onclick="updateOrderStatus('${orderId}', 'cancelled')" class="btn btn-danger">
+                    <button onclick="updateOrderStatus('${orderIdStr}', 'cancelled')" class="btn btn-danger">
                         Отменить
                     </button>
                 `);
             } else if (status === 'ready') {
                 buttons.push(`
-                    <button onclick="updateOrderStatus('${orderId}', 'completed')" class="btn btn-success">
+                    <button onclick="updateOrderStatus('${orderIdStr}', 'completed')" class="btn btn-success">
                         Завершить
                     </button>
-                    <button onclick="updateOrderStatus('${orderId}', 'cancelled')" class="btn btn-danger">
+                    <button onclick="updateOrderStatus('${orderIdStr}', 'cancelled')" class="btn btn-danger">
                         Отменить
                     </button>
                 `);
             }
             
             return buttons.join('');
-        }
-
-        // Обновление статуса заказа
-        function updateOrderStatus(orderId, newStatus) {
-            try {
-                if (Orders.updateStatus(orderId, newStatus)) {
-                    // Обновляем отображение заказов
-                    loadOrders();
-                    // Показываем уведомление об успешном обновлении
-                    showNotification(`Статус заказа успешно изменен на "${getStatusText(newStatus)}"`);
-                } else {
-                    showNotification('Ошибка при обновлении статуса заказа', 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка при обновлении статуса заказа:', error);
-                showNotification('Ошибка при обновлении статуса заказа', 'error');
-            }
         }
 
         // Функция для отображения уведомлений
