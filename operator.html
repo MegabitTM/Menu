@@ -452,6 +452,14 @@
                         const orderDate = new Date(timestamp * 1000);
                         if (isNaN(orderDate.getTime())) return false;
 
+                        // Проверяем, что дата заказа не раньше 2020 года
+                        if (orderDate.getFullYear() < 2020) return false;
+
+                        // Проверяем, что дата заказа не позже чем через год от текущей даты
+                        const maxFutureDate = new Date();
+                        maxFutureDate.setFullYear(todayYear + 1);
+                        if (orderDate > maxFutureDate) return false;
+
                         return orderDate.getFullYear() === todayYear &&
                                orderDate.getMonth() === todayMonth &&
                                orderDate.getDate() === todayDate;
@@ -534,6 +542,13 @@
                             return false;
                         }
                         
+                        // Проверяем, что дата заказа не раньше 2020 года
+                        if (orderDate.getFullYear() < 2020) {
+                            console.warn('Дата заказа слишком старая:', order);
+                            return false;
+                        }
+                        
+                        // Проверяем, что дата заказа не позже чем через год от текущей даты
                         const maxFutureDate = new Date();
                         maxFutureDate.setFullYear(todayYear + 1);
                         if (orderDate > maxFutureDate) {
@@ -541,6 +556,7 @@
                             return false;
                         }
                         
+                        // Сравниваем только день, месяц и год
                         return orderDate.getFullYear() === todayYear && 
                                orderDate.getMonth() === todayMonth && 
                                orderDate.getDate() === todayDate;
