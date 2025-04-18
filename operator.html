@@ -464,7 +464,7 @@
             const sortedOrders = [...orders].sort((a, b) => {
                 if (a.status === 'new' && b.status !== 'new') return -1;
                 if (a.status !== 'new' && b.status === 'new') return 1;
-                return b.id - a.id; // Сортируем по ID, так как это timestamp
+                return b.timestamp - a.timestamp; // Сортируем по timestamp
             });
 
             ordersContainer.innerHTML = '';
@@ -476,8 +476,19 @@
 
             sortedOrders.forEach(order => {
                 try {
-                    // Используем ID как timestamp
-                    const orderDate = new Date(parseInt(order.id));
+                    // Получаем timestamp из объекта заказа или из ID
+                    let timestamp;
+                    if (order.timestamp) {
+                        timestamp = order.timestamp;
+                    } else if (order.id.includes('_')) {
+                        const parts = order.id.split('_');
+                        timestamp = parseInt(parts[parts.length - 1]);
+                    } else {
+                        console.warn('Некорректный формат ID или отсутствует timestamp:', order);
+                        return;
+                    }
+
+                    const orderDate = new Date(timestamp * 1000);
                     if (isNaN(orderDate.getTime())) {
                         console.warn('Некорректная дата в заказе:', order);
                         return;
@@ -494,7 +505,7 @@
                     orderElement.className = `order-item ${order.status}`;
                     orderElement.innerHTML = `
                         <div class="order-header">
-                            <span class="order-id">Заказ #${orderCounter}</span>
+                            <span class="order-id">Заказ №${orderCounter}</span>
                             <span class="order-date">${orderDate.toLocaleString('ru-RU')}</span>
                             <span class="order-status">${getStatusText(order.status)}</span>
                         </div>
