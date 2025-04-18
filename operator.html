@@ -460,7 +460,7 @@
                 
                 console.log('Сегодняшняя дата:', today);
                 
-                // Фильтруем заказы по дате
+                // Фильтруем заказы по дате и валидируем их
                 const todayOrders = allOrders.filter(order => {
                     try {
                         // Получаем timestamp из объекта заказа или из ID
@@ -477,12 +477,31 @@
                             }
                         }
                         
+                        // Проверяем корректность timestamp
+                        if (isNaN(timestamp) || timestamp <= 0) {
+                            console.warn('Некорректный timestamp в заказе:', order);
+                            return false;
+                        }
+                        
                         const orderDate = new Date(timestamp * 1000);
+                        
+                        // Проверяем корректность даты
+                        if (isNaN(orderDate.getTime())) {
+                            console.warn('Некорректная дата в заказе:', order);
+                            return false;
+                        }
+                        
+                        // Проверяем, что дата не слишком далеко в будущем
+                        const maxFutureDate = new Date();
+                        maxFutureDate.setFullYear(todayYear + 1);
+                        if (orderDate > maxFutureDate) {
+                            console.warn('Дата заказа слишком далеко в будущем:', order);
+                            return false;
+                        }
+                        
                         const orderYear = orderDate.getFullYear();
                         const orderMonth = orderDate.getMonth();
                         const orderDay = orderDate.getDate();
-                        
-                        console.log('Дата заказа:', orderDate, 'ID:', order.id, 'Timestamp:', timestamp);
                         
                         // Сравниваем только день, месяц и год
                         return orderYear === todayYear && 
