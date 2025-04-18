@@ -560,7 +560,12 @@
                             return false;
                         }
                         
-                        // Сравниваем только день, месяц и год
+                        // Если заказ в работе (preparing), показываем его независимо от даты
+                        if (order.status === 'preparing') {
+                            return true;
+                        }
+                        
+                        // Для остальных заказов проверяем дату
                         return orderDate.getFullYear() === todayYear && 
                                orderDate.getMonth() === todayMonth && 
                                orderDate.getDate() === todayDate;
