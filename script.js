@@ -139,7 +139,7 @@ function validateData(data) {
 // Функция сохранения данных
 async function saveData() {
     try {
-        // Сначала сохраняем в IndexedDB
+        // Сохраняем в IndexedDB
         if (!db) {
             db = await initDB();
         }
@@ -160,35 +160,12 @@ async function saveData() {
             };
         });
 
-        // Затем сохраняем на сервере
-        const response = await fetch('save_data.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(appData)
-        });
-
-        if (!response.ok) {
-            throw new Error('Ошибка при сохранении данных на сервере');
-        }
-
-        const result = await response.json();
-        if (!result.success) {
-            throw new Error(result.error || 'Ошибка при сохранении данных');
-        }
-
-        console.log('Данные успешно сохранены на сервере');
+        // Сохраняем в localStorage как резервную копию
+        localStorage.setItem('appData', JSON.stringify(appData));
+        console.log('Данные успешно сохранены в localStorage');
         return true;
     } catch (error) {
         console.error('Error saving data:', error);
-        // В случае ошибки сохраняем в localStorage как резервную копию
-        try {
-            localStorage.setItem('appData', JSON.stringify(appData));
-            console.log('Данные сохранены в localStorage как резервная копия');
-        } catch (e) {
-            console.error('Error saving to localStorage:', e);
-        }
         throw error;
     }
 }
@@ -196,75 +173,61 @@ async function saveData() {
 // Функция загрузки данных
 async function loadData() {
     try {
-        // Загружаем данные с сервера
-        const response = await fetch('load_data.php');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        // Пробуем загрузить из IndexedDB
+        if (!db) {
+            db = await initDB();
         }
-        const data = await response.json();
-        
-        // Проверяем структуру данных
-        if (!data || typeof data !== 'object') {
-            throw new Error('Invalid data structure');
+
+        const data = await new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get('data');
+            
+            request.onsuccess = () => {
+                resolve(request.result);
+            };
+            
+            request.onerror = () => {
+                reject(request.error);
+            };
+        });
+
+        if (data) {
+            updateAppData(data);
+            return;
         }
-        
-        // Проверяем обязательные поля
-        if (!data.settings || !data.categories || !Array.isArray(data.categories)) {
-            throw new Error('Missing required fields');
-        }
-        
-        // Преобразуем числовые значения
-        function convertNumericValues(obj) {
-            if (Array.isArray(obj)) {
-                return obj.map(item => convertNumericValues(item));
-            } else if (obj && typeof obj === 'object') {
-                const result = {};
-                for (const key in obj) {
-                    if (obj.hasOwnProperty(key)) {
-                        const value = obj[key];
-                        if (key === 'price' && typeof value === 'string') {
-                            result[key] = parseFloat(value);
-                        } else {
-                            result[key] = convertNumericValues(value);
-                        }
-                    }
-                }
-                return result;
+
+        // Если в IndexedDB нет данных, пробуем загрузить из localStorage
+        const localStorageData = localStorage.getItem('appData');
+        if (localStorageData) {
+            const parsedData = JSON.parse(localStorageData);
+            if (validateData(parsedData)) {
+                updateAppData(parsedData);
+                return;
             }
-            return obj;
         }
+
+        // Если нет данных нигде, используем дефолтные
+        updateAppData(appData);
         
-        // Применяем преобразование
-        const convertedData = convertNumericValues(data);
-        
-        // Очищаем IndexedDB перед сохранением новых данных
-        const db = await initDB();
-        const transaction = db.transaction(['appData'], 'readwrite');
-        const store = transaction.objectStore('appData');
-        await store.clear();
-        
-        // Сохраняем данные в IndexedDB
-        await store.put(convertedData, 'appData');
-        
-        // Обновляем appData
-        appData = convertedData;
-        
-        console.log('Data loaded successfully');
-        return true;
     } catch (error) {
         console.error('Error loading data:', error);
-        // Пробуем загрузить данные из localStorage как резервный вариант
+        // В случае ошибки пробуем загрузить из localStorage
         try {
-            const savedData = localStorage.getItem('appData');
-            if (savedData) {
-                appData = JSON.parse(savedData);
-                console.log('Data loaded from localStorage');
-                return true;
+            const localStorageData = localStorage.getItem('appData');
+            if (localStorageData) {
+                const parsedData = JSON.parse(localStorageData);
+                if (validateData(parsedData)) {
+                    updateAppData(parsedData);
+                    return;
+                }
             }
+            // Если в localStorage тоже нет валидных данных, используем дефолтные
+            updateAppData(appData);
         } catch (e) {
             console.error('Error loading from localStorage:', e);
+            updateAppData(appData);
         }
-        return false;
     }
 }
 
