@@ -464,7 +464,7 @@
             const sortedOrders = [...orders].sort((a, b) => {
                 if (a.status === 'new' && b.status !== 'new') return -1;
                 if (a.status !== 'new' && b.status === 'new') return 1;
-                return b.timestamp - a.timestamp;
+                return b.id - a.id; // Сортируем по ID, так как это timestamp
             });
 
             ordersContainer.innerHTML = '';
@@ -476,15 +476,8 @@
 
             sortedOrders.forEach(order => {
                 try {
-                    // Проверяем и корректируем timestamp
-                    const timestamp = order.timestamp || order.date;
-                    if (!timestamp) {
-                        console.warn('Заказ без даты:', order);
-                        return;
-                    }
-
-                    // Создаем дату из timestamp
-                    const orderDate = new Date(timestamp * 1000);
+                    // Используем ID как timestamp
+                    const orderDate = new Date(parseInt(order.id));
                     if (isNaN(orderDate.getTime())) {
                         console.warn('Некорректная дата в заказе:', order);
                         return;
