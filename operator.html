@@ -695,8 +695,20 @@
                 
                 console.log('Найден заказ:', order);
                 
-                // Проверяем текущий статус заказа
-                if (order.status === 'preparing' && newStatus === 'ready') {
+                // Разрешаем следующие переходы статусов:
+                // new -> preparing
+                // preparing -> ready
+                // ready -> completed
+                // любой статус -> cancelled
+                const validTransitions = {
+                    'new': ['preparing', 'cancelled'],
+                    'preparing': ['ready', 'cancelled'],
+                    'ready': ['completed', 'cancelled'],
+                    'completed': ['cancelled'],
+                    'cancelled': []
+                };
+                
+                if (validTransitions[order.status] && validTransitions[order.status].includes(newStatus)) {
                     // Обновляем статус
                     if (Orders.updateStatus(orderId, newStatus)) {
                         console.log('Статус успешно обновлен');
