@@ -695,16 +695,22 @@
                 
                 console.log('Найден заказ:', order);
                 
-                // Обновляем статус
-                if (Orders.updateStatus(orderId, newStatus)) {
-                    console.log('Статус успешно обновлен');
-                    // Обновляем отображение заказов
-                    loadOrders();
-                    // Показываем уведомление об успешном обновлении
-                    showNotification(`Статус заказа успешно изменен на "${getStatusText(newStatus)}"`);
+                // Проверяем текущий статус заказа
+                if (order.status === 'preparing' && newStatus === 'ready') {
+                    // Обновляем статус
+                    if (Orders.updateStatus(orderId, newStatus)) {
+                        console.log('Статус успешно обновлен');
+                        // Обновляем отображение заказов
+                        loadOrders();
+                        // Показываем уведомление об успешном обновлении
+                        showNotification(`Статус заказа успешно изменен на "${getStatusText(newStatus)}"`);
+                    } else {
+                        console.error('Ошибка при вызове Orders.updateStatus');
+                        showNotification('Ошибка при обновлении статуса заказа', 'error');
+                    }
                 } else {
-                    console.error('Ошибка при вызове Orders.updateStatus');
-                    showNotification('Ошибка при обновлении статуса заказа', 'error');
+                    console.error('Некорректный переход статуса:', { current: order.status, new: newStatus });
+                    showNotification('Некорректный переход статуса', 'error');
                 }
             } catch (error) {
                 console.error('Ошибка при обновлении статуса заказа:', error);
