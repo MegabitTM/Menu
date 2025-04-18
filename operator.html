@@ -216,6 +216,30 @@
 
         .order-actions button {
             flex: 1;
+            border-radius: 25px;
+            padding: 8px 20px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .order-actions button.btn-danger {
+            background: linear-gradient(45deg, #dc3545, #ff4d4d);
+            border: none;
+        }
+
+        .order-actions button.btn-danger:hover {
+            background: linear-gradient(45deg, #c82333, #e63946);
+            transform: translateY(-2px);
+        }
+
+        .order-actions button.btn-primary {
+            background: linear-gradient(45deg, #0d6efd, #0a58ca);
+            border: none;
+        }
+
+        .order-actions button.btn-primary:hover {
+            background: linear-gradient(45deg, #0b5ed7, #084298);
+            transform: translateY(-2px);
         }
 
         .stats-container {
@@ -436,15 +460,35 @@
             const ordersContainer = document.getElementById('orders-container');
             if (!ordersContainer) return;
 
+            // Сортируем заказы: новые сверху
+            const sortedOrders = [...orders].sort((a, b) => {
+                if (a.status === 'new' && b.status !== 'new') return -1;
+                if (a.status !== 'new' && b.status === 'new') return 1;
+                return b.timestamp - a.timestamp;
+            });
+
             ordersContainer.innerHTML = '';
             
-            orders.forEach(order => {
+            // Получаем текущую дату для нумерации заказов
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            let orderCounter = 1;
+
+            sortedOrders.forEach(order => {
+                const orderDate = new Date(order.timestamp * 1000);
+                const orderDateStr = orderDate.toISOString().split('T')[0];
+                
+                // Сбрасываем счетчик, если дата заказа не сегодня
+                if (orderDateStr !== todayStr) {
+                    orderCounter = 1;
+                }
+
                 const orderElement = document.createElement('div');
                 orderElement.className = `order-item ${order.status}`;
                 orderElement.innerHTML = `
                     <div class="order-header">
-                        <span class="order-id">Заказ #${order.id}</span>
-                        <span class="order-date">${new Date(order.date).toLocaleString()}</span>
+                        <span class="order-id">Заказ #${orderCounter}</span>
+                        <span class="order-date">${orderDate.toLocaleString()}</span>
                         <span class="order-status">${getStatusText(order.status)}</span>
                     </div>
                     <div class="order-items">
@@ -464,6 +508,7 @@
                     </div>
                 `;
                 ordersContainer.appendChild(orderElement);
+                orderCounter++;
             });
         }
 
