@@ -769,24 +769,16 @@ async function saveDish(imagePath) {
         
         // Если есть новое изображение
         if (imagePath instanceof File) {
-            const formData = new FormData();
-            formData.append('file', imagePath);
+            // Оптимизируем изображение
+            const optimizedBlob = await optimizeImage(imagePath, 800, 600, 0.8);
             
-            const response = await fetch('upload.php', {
-                method: 'POST',
-                body: formData
+            // Конвертируем в base64
+            const reader = new FileReader();
+            const base64Promise = new Promise((resolve) => {
+                reader.onload = () => resolve(reader.result);
             });
-
-            if (!response.ok) {
-                throw new Error('Ошибка при загрузке изображения');
-            }
-
-            const result = await response.json();
-            if (!result.success) {
-                throw new Error(result.error || 'Ошибка при загрузке изображения');
-            }
-            
-            imageUrl = result.path;
+            reader.readAsDataURL(optimizedBlob);
+            imageUrl = await base64Promise;
         } else if (imagePath) {
             // Если передано URL изображения
             imageUrl = imagePath;
@@ -803,14 +795,12 @@ async function saveDish(imagePath) {
         // Если есть новое изображение, добавляем его
         if (imageUrl) {
             dish.img = imageUrl;
-            dish.imgPath = imageUrl;
         } else if (index !== 'new') {
             // Если редактируем существующее блюдо и нет нового изображения,
             // сохраняем старое изображение
             const oldDish = appData.menuData[oldCategory][index];
             if (oldDish) {
                 dish.img = oldDish.img;
-                dish.imgPath = oldDish.imgPath;
             }
         }
 
@@ -911,46 +901,19 @@ async function uploadLogo(file) {
             throw new Error('Изображение слишком большое (максимум 5MB)');
         }
 
-        // Проверяем директорию images
-        const checkResponse = await fetch('check_dir.php');
-        if (!checkResponse.ok) {
-            throw new Error('Ошибка при проверке директории images');
-        }
-        
-        const checkResult = await checkResponse.json();
-        if (!checkResult.writable) {
-            throw new Error(checkResult.error || 'Директория images не доступна для записи');
-        }
-
         // Оптимизируем изображение
         const optimizedBlob = await optimizeImage(file, 800, 800, 0.9);
         
-        // Формируем имя файла
-        const fileName = `logo_${Date.now()}.jpg`;
-        const filePath = `images/${fileName}`;
-        
-        // Создаем FormData для отправки
-        const formData = new FormData();
-        formData.append('file', optimizedBlob, fileName);
-        formData.append('path', filePath);
-        
-        // Отправляем на сервер
-        const response = await fetch('upload.php', {
-            method: 'POST',
-            body: formData
+        // Конвертируем в base64
+        const reader = new FileReader();
+        const base64Promise = new Promise((resolve) => {
+            reader.onload = () => resolve(reader.result);
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        if (!result.success) {
-            throw new Error(result.error || 'Ошибка при загрузке логотипа');
-        }
+        reader.readAsDataURL(optimizedBlob);
+        const base64Data = await base64Promise;
 
         // Обновляем путь к логотипу
-        appData.settings.headerLogo = result.path;
+        appData.settings.headerLogo = base64Data;
         updateHeaderLogo();
         await saveData();
         
@@ -978,32 +941,16 @@ async function uploadHeaderBackground(file) {
         // Оптимизируем изображение
         const optimizedBlob = await optimizeImage(file, 1920, 1080, 0.8);
         
-        // Формируем имя файла
-        const fileName = `header_${Date.now()}.jpg`;
-        const filePath = `images/${fileName}`;
-        
-        // Создаем FormData для отправки
-        const formData = new FormData();
-        formData.append('file', optimizedBlob, fileName);
-        formData.append('path', filePath);
-        
-        // Отправляем на сервер
-        const response = await fetch('upload.php', {
-            method: 'POST',
-            body: formData
+        // Конвертируем в base64
+        const reader = new FileReader();
+        const base64Promise = new Promise((resolve) => {
+            reader.onload = () => resolve(reader.result);
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        if (!result.success) {
-            throw new Error(result.error || 'Ошибка при загрузке фона шапки');
-        }
+        reader.readAsDataURL(optimizedBlob);
+        const base64Data = await base64Promise;
 
         // Обновляем путь к фону
-        appData.settings.headerBgImage = result.path;
+        appData.settings.headerBgImage = base64Data;
         updateHeaderLogo();
         await saveData();
         
@@ -1851,33 +1798,26 @@ async function confirmOrder() {
         const comment = document.getElementById('order-comment').value;
         const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-        const orderData = {
+        // Сохраняем заказ в localStorage
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const newOrder = {
+            id: Date.now(),
             items: cart,
             total: total,
-            comment: comment
+            comment: comment,
+            status: 'new',
+            date: new Date().toISOString()
         };
+        orders.push(newOrder);
+        localStorage.setItem('orders', JSON.stringify(orders));
 
-        const response = await fetch('save_order.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(orderData)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert('Заказ успешно отправлен!');
-            clearCart();
-            hideConfirmOrderModal();
-            updateCartBadge();
-        } else {
-            throw new Error(result.error || 'Ошибка при отправке заказа');
-        }
+        alert('Заказ успешно сохранен!');
+        clearCart();
+        hideConfirmOrderModal();
+        updateCartBadge();
     } catch (error) {
-        console.error('Ошибка при отправке заказа:', error);
-        alert('Ошибка при отправке заказа: ' + error.message);
+        console.error('Ошибка при сохранении заказа:', error);
+        alert('Ошибка при сохранении заказа: ' + error.message);
     }
 }
 
