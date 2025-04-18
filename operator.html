@@ -666,36 +666,34 @@
             });
         }
 
-        // Получение текста статуса
-        function getStatusText(status) {
-            const statusMap = {
-                'new': 'Новый',
-                'in_progress': 'В работе',
-                'completed': 'Выполнен',
-                'cancelled': 'Отменен'
-            };
-            return statusMap[status] || status;
-        }
-
         // Получение кнопок для статуса
         function getStatusButtons(status, orderId) {
             const buttons = [];
             
             if (status === 'new') {
                 buttons.push(`
-                    <button onclick="updateOrderStatus(${orderId}, 'in_progress')" class="btn btn-primary">
+                    <button onclick="updateOrderStatus('${orderId}', 'preparing')" class="btn btn-primary">
                         Взять в работу
                     </button>
-                    <button onclick="updateOrderStatus(${orderId}, 'cancelled')" class="btn btn-danger">
+                    <button onclick="updateOrderStatus('${orderId}', 'cancelled')" class="btn btn-danger">
                         Отменить
                     </button>
                 `);
-            } else if (status === 'in_progress') {
+            } else if (status === 'preparing') {
                 buttons.push(`
-                    <button onclick="updateOrderStatus(${orderId}, 'completed')" class="btn btn-success">
+                    <button onclick="updateOrderStatus('${orderId}', 'ready')" class="btn btn-success">
+                        Готов
+                    </button>
+                    <button onclick="updateOrderStatus('${orderId}', 'cancelled')" class="btn btn-danger">
+                        Отменить
+                    </button>
+                `);
+            } else if (status === 'ready') {
+                buttons.push(`
+                    <button onclick="updateOrderStatus('${orderId}', 'completed')" class="btn btn-success">
                         Завершить
                     </button>
-                    <button onclick="updateOrderStatus(${orderId}, 'cancelled')" class="btn btn-danger">
+                    <button onclick="updateOrderStatus('${orderId}', 'cancelled')" class="btn btn-danger">
                         Отменить
                     </button>
                 `);
@@ -706,11 +704,59 @@
 
         // Обновление статуса заказа
         function updateOrderStatus(orderId, newStatus) {
-            if (Orders.updateStatus(orderId, newStatus)) {
-                loadOrders();
-            } else {
-                alert('Ошибка при обновлении статуса заказа');
+            try {
+                if (Orders.updateStatus(orderId, newStatus)) {
+                    // Обновляем отображение заказов
+                    loadOrders();
+                    // Показываем уведомление об успешном обновлении
+                    showNotification(`Статус заказа успешно изменен на "${getStatusText(newStatus)}"`);
+                } else {
+                    showNotification('Ошибка при обновлении статуса заказа', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка при обновлении статуса заказа:', error);
+                showNotification('Ошибка при обновлении статуса заказа', 'error');
             }
+        }
+
+        // Функция для отображения уведомлений
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'error' ? 'danger' : 'success'} notification`;
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '1000';
+            notification.style.opacity = '0';
+            notification.style.transition = 'opacity 0.3s';
+            
+            document.body.appendChild(notification);
+            
+            // Показываем уведомление
+            setTimeout(() => {
+                notification.style.opacity = '1';
+            }, 100);
+            
+            // Убираем уведомление через 3 секунды
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Получение текста статуса
+        function getStatusText(status) {
+            const statusMap = {
+                'new': 'Новый',
+                'preparing': 'Готовится',
+                'ready': 'Готов',
+                'completed': 'Завершен',
+                'cancelled': 'Отменен'
+            };
+            return statusMap[status] || status;
         }
 
         // Инициализация при загрузке страницы
