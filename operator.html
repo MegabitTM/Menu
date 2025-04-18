@@ -480,12 +480,16 @@
                     let timestamp;
                     if (order.timestamp) {
                         timestamp = order.timestamp;
-                    } else if (order.id.includes('_')) {
-                        const parts = order.id.split('_');
-                        timestamp = parseInt(parts[parts.length - 1]);
                     } else {
-                        console.warn('Некорректный формат ID или отсутствует timestamp:', order);
-                        return;
+                        // Преобразуем ID в строку и проверяем формат
+                        const idStr = String(order.id);
+                        if (idStr.includes('_')) {
+                            const parts = idStr.split('_');
+                            timestamp = parseInt(parts[parts.length - 1]);
+                        } else {
+                            // Если ID не содержит подчеркиваний, используем его как timestamp
+                            timestamp = parseInt(idStr);
+                        }
                     }
 
                     const orderDate = new Date(timestamp * 1000);
