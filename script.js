@@ -1812,9 +1812,9 @@ async function confirmOrder() {
         localStorage.setItem('orders', JSON.stringify(orders));
 
         alert('Заказ успешно сохранен!');
-        clearCart();
-        hideConfirmOrderModal();
-        updateCartBadge();
+            clearCart();
+            hideConfirmOrderModal();
+            updateCartBadge();
     } catch (error) {
         console.error('Ошибка при сохранении заказа:', error);
         alert('Ошибка при сохранении заказа: ' + error.message);

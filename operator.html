@@ -302,12 +302,12 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="filter-buttons">
-                    <button class="btn btn-outline-warning" data-status="new">Новые</button>
-                    <button class="btn btn-outline-info" data-status="preparing">Готовятся</button>
-                    <button class="btn btn-outline-success" data-status="ready">Готовы</button>
-                    <button class="btn btn-outline-secondary" data-status="completed">Завершённые</button>
-                    <button class="btn btn-outline-primary" data-status="all">Все заказы</button>
+            <div class="filter-buttons">
+                <button class="btn btn-outline-warning" data-status="new">Новые</button>
+                <button class="btn btn-outline-info" data-status="preparing">Готовятся</button>
+                <button class="btn btn-outline-success" data-status="ready">Готовы</button>
+                <button class="btn btn-outline-secondary" data-status="completed">Завершённые</button>
+                <button class="btn btn-outline-primary" data-status="all">Все заказы</button>
                 </div>
             </div>
 
@@ -443,11 +443,15 @@
         function loadOrders() {
             try {
                 const allOrders = Orders.getAll();
-                console.log('Все заказы:', allOrders); // Логируем все заказы
+                console.log('Все заказы:', allOrders);
                 
+                // Получаем текущую дату
                 const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                console.log('Сегодняшняя дата:', today); // Логируем сегодняшнюю дату
+                const todayYear = today.getFullYear();
+                const todayMonth = today.getMonth();
+                const todayDate = today.getDate();
+                
+                console.log('Сегодняшняя дата:', today);
                 
                 // Фильтруем заказы по дате
                 const todayOrders = allOrders.filter(order => {
@@ -467,18 +471,23 @@
                         }
                         
                         const orderDate = new Date(timestamp * 1000);
-                        orderDate.setHours(0, 0, 0, 0);
+                        const orderYear = orderDate.getFullYear();
+                        const orderMonth = orderDate.getMonth();
+                        const orderDay = orderDate.getDate();
                         
-                        console.log('Дата заказа:', orderDate, 'ID:', order.id, 'Timestamp:', timestamp); // Логируем дату заказа
+                        console.log('Дата заказа:', orderDate, 'ID:', order.id, 'Timestamp:', timestamp);
                         
-                        return orderDate.getTime() === today.getTime();
+                        // Сравниваем только день, месяц и год
+                        return orderYear === todayYear && 
+                               orderMonth === todayMonth && 
+                               orderDay === todayDate;
                     } catch (error) {
                         console.error('Ошибка при обработке заказа:', error, order);
                         return false;
                     }
                 });
                 
-                console.log('Сегодняшние заказы:', todayOrders); // Логируем отфильтрованные заказы
+                console.log('Сегодняшние заказы:', todayOrders);
                 
                 const filteredOrders = currentFilter === 'all' 
                     ? todayOrders 
@@ -549,23 +558,23 @@
                             <span class="order-id">Заказ №${orderCounter}</span>
                             <span class="order-date">${orderDate.toLocaleString('ru-RU')}</span>
                             <span class="order-status">${getStatusText(order.status)}</span>
-                        </div>
+                    </div>
                         <div class="order-items">
-                            ${order.items.map(item => `
+                        ${order.items.map(item => `
                                 <div class="order-item-detail">
                                     <span>${item.name} x${item.quantity}</span>
                                     <span>${item.price * item.quantity} TMT</span>
-                                </div>
-                            `).join('')}
-                        </div>
+                            </div>
+                        `).join('')}
+                    </div>
                         <div class="order-footer">
                             <div class="order-total">Итого: ${order.total} TMT</div>
                             ${order.comment ? `<div class="order-comment">Комментарий: ${order.comment}</div>` : ''}
                             <div class="order-actions">
                                 ${getStatusButtons(order.status, order.id)}
                             </div>
-                        </div>
-                    `;
+                </div>
+            `;
                     ordersContainer.appendChild(orderElement);
                     orderCounter++;
                 } catch (error) {
@@ -625,9 +634,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
             loadOrders();
-            
-            // Автоматическое обновление каждые 5 секунд
-            setInterval(loadOrders, 5000);
+
+        // Автоматическое обновление каждые 5 секунд
+        setInterval(loadOrders, 5000);
         });
     </script>
 </body>
