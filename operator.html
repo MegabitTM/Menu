@@ -462,6 +462,11 @@
                         maxFutureDate.setFullYear(todayYear + 1);
                         if (orderDate > maxFutureDate) return false;
 
+                        // Если заказ в работе (preparing), показываем его независимо от даты
+                        if (order.status === 'preparing') {
+                            return true;
+                        }
+
                         return orderDate.getFullYear() === todayYear &&
                                orderDate.getMonth() === todayMonth &&
                                orderDate.getDate() === todayDate;
@@ -475,7 +480,7 @@
                 const stats = {
                     total: todayOrders.length,
                     new: todayOrders.filter(o => o.status === 'new').length,
-                    inProgress: todayOrders.filter(o => o.status === 'in_progress').length,
+                    inProgress: todayOrders.filter(o => o.status === 'preparing').length,
                     completed: todayOrders.filter(o => o.status === 'completed').length,
                     cancelled: todayOrders.filter(o => o.status === 'cancelled').length,
                     totalAmount: todayOrders.reduce((sum, order) => sum + order.total, 0)
