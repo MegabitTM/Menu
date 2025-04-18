@@ -471,44 +471,61 @@
             
             // Получаем текущую дату для нумерации заказов
             const today = new Date();
-            const todayStr = today.toISOString().split('T')[0];
+            const todayStr = today.toLocaleDateString('ru-RU');
             let orderCounter = 1;
 
             sortedOrders.forEach(order => {
-                const orderDate = new Date(order.timestamp * 1000);
-                const orderDateStr = orderDate.toISOString().split('T')[0];
-                
-                // Сбрасываем счетчик, если дата заказа не сегодня
-                if (orderDateStr !== todayStr) {
-                    orderCounter = 1;
-                }
+                try {
+                    // Проверяем и корректируем timestamp
+                    const timestamp = order.timestamp || order.date;
+                    if (!timestamp) {
+                        console.warn('Заказ без даты:', order);
+                        return;
+                    }
 
-                const orderElement = document.createElement('div');
-                orderElement.className = `order-item ${order.status}`;
-                orderElement.innerHTML = `
-                    <div class="order-header">
-                        <span class="order-id">Заказ #${orderCounter}</span>
-                        <span class="order-date">${orderDate.toLocaleString()}</span>
-                        <span class="order-status">${getStatusText(order.status)}</span>
-                    </div>
-                    <div class="order-items">
-                        ${order.items.map(item => `
-                            <div class="order-item-detail">
-                                <span>${item.name} x${item.quantity}</span>
-                                <span>${item.price * item.quantity} TMT</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="order-footer">
-                        <div class="order-total">Итого: ${order.total} TMT</div>
-                        ${order.comment ? `<div class="order-comment">Комментарий: ${order.comment}</div>` : ''}
-                        <div class="order-actions">
-                            ${getStatusButtons(order.status, order.id)}
+                    // Создаем дату из timestamp
+                    const orderDate = new Date(timestamp * 1000);
+                    if (isNaN(orderDate.getTime())) {
+                        console.warn('Некорректная дата в заказе:', order);
+                        return;
+                    }
+
+                    const orderDateStr = orderDate.toLocaleDateString('ru-RU');
+                    
+                    // Сбрасываем счетчик, если дата заказа не сегодня
+                    if (orderDateStr !== todayStr) {
+                        orderCounter = 1;
+                    }
+
+                    const orderElement = document.createElement('div');
+                    orderElement.className = `order-item ${order.status}`;
+                    orderElement.innerHTML = `
+                        <div class="order-header">
+                            <span class="order-id">Заказ #${orderCounter}</span>
+                            <span class="order-date">${orderDate.toLocaleString('ru-RU')}</span>
+                            <span class="order-status">${getStatusText(order.status)}</span>
                         </div>
-                    </div>
-                `;
-                ordersContainer.appendChild(orderElement);
-                orderCounter++;
+                        <div class="order-items">
+                            ${order.items.map(item => `
+                                <div class="order-item-detail">
+                                    <span>${item.name} x${item.quantity}</span>
+                                    <span>${item.price * item.quantity} TMT</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="order-footer">
+                            <div class="order-total">Итого: ${order.total} TMT</div>
+                            ${order.comment ? `<div class="order-comment">Комментарий: ${order.comment}</div>` : ''}
+                            <div class="order-actions">
+                                ${getStatusButtons(order.status, order.id)}
+                            </div>
+                        </div>
+                    `;
+                    ordersContainer.appendChild(orderElement);
+                    orderCounter++;
+                } catch (error) {
+                    console.error('Ошибка при отображении заказа:', error, order);
+                }
             });
         }
 
