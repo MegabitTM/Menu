@@ -364,8 +364,8 @@
             }
             
             try {
-                // Загружаем заказы
-                const response = await fetch('get_orders.php');
+                // Загружаем заказы из локального файла
+                const response = await fetch('orders.json');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
