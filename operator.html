@@ -324,6 +324,13 @@
     <script src="lib/indexeddb.js"></script>
     <script src="lib/orders.js"></script>
     <script>
+        // Проверяем, что Orders доступен
+        if (typeof Orders === 'undefined') {
+            console.error('Orders не загружен! Проверьте подключение orders.js');
+        } else {
+            console.log('Orders загружен успешно');
+        }
+
         let orders = [];
         let currentFilter = localStorage.getItem('operatorFilter') || 'new';
         let previousOrdersCount = 0;
@@ -572,7 +579,7 @@
                             ${order.comment ? `<div class="order-comment">Комментарий: ${order.comment}</div>` : ''}
                             <div class="order-actions">
                                 ${getStatusButtons(order.status, order.id)}
-                            </div>
+                    </div>
                 </div>
             `;
                     ordersContainer.appendChild(orderElement);
