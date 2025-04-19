@@ -278,6 +278,43 @@
         body.dark-theme .stats-container::-webkit-scrollbar-thumb:hover {
             background: #888;
         }
+
+        .order-actions button.btn-primary:hover {
+            background: linear-gradient(45deg, #0b5ed7, #084298);
+            transform: translateY(-2px);
+        }
+
+        .order-customer {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .customer-name {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .customer-phone {
+            color: #888;
+        }
+
+        body.dark-theme .order-customer {
+            color: #bbb;
+        }
+
+        body.dark-theme .customer-phone {
+            color: #999;
+        }
+
+        .phone-number {
+            color: #28a745;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .phone-number:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body class="light-theme">
@@ -285,33 +322,6 @@
         <div class="container py-4">
             <h1 class="mb-4">Операторская панель</h1>
             
-            <div class="stats-container">
-                <div class="stat-card">
-                    <div class="stat-label">Всего заказов</div>
-                    <div class="stat-value" id="total-orders">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Новые</div>
-                    <div class="stat-value" id="new-orders">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">В работе</div>
-                    <div class="stat-value" id="in-progress-orders">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Завершено</div>
-                    <div class="stat-value" id="completed-orders">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Отменено</div>
-                    <div class="stat-value" id="cancelled-orders">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Общая сумма</div>
-                    <div class="stat-value" id="total-amount">0 TMT</div>
-                </div>
-            </div>
-
             <div class="d-flex justify-content-between align-items-center mb-3">
             <div class="filter-buttons">
                 <button class="btn btn-outline-warning" data-status="new">Новые</button>
@@ -433,32 +443,6 @@
             });
         }
 
-        // Обновление статистики
-        function updateStats() {
-            console.log('Обновление статистики...');
-            const stats = Orders.getStats();
-            console.log('Получена статистика:', stats);
-            
-            // Обновляем статистику в карточках
-            const statElements = {
-                    'total-orders': stats.total,
-                    'new-orders': stats.new,
-                'in-progress-orders': stats.preparing,
-                    'completed-orders': stats.completed,
-                    'cancelled-orders': stats.cancelled,
-                'total-amount': `${stats.totalAmount} TMT`
-                };
-
-            Object.entries(statElements).forEach(([id, value]) => {
-                    const element = document.getElementById(id);
-                    if (element) {
-                        element.textContent = value;
-                } else {
-                    console.warn(`Элемент с id ${id} не найден`);
-                    }
-                });
-        }
-
         // Загрузка заказов
         function loadOrders() {
             try {
@@ -520,7 +504,6 @@
                     : todayOrders.filter(order => order.status === currentFilter);
                 
                 displayOrders(filteredOrders);
-                updateStats();
                 updateActiveFilterButton();
             } catch (error) {
                 console.error('Ошибка при загрузке заказов:', error);
@@ -646,7 +629,6 @@
                 console.log('Статус заказа успешно обновлен');
                 
                 // Обновляем отображение
-                updateStats();
                 loadOrders();
                 
                         // Показываем уведомление об успешном обновлении
