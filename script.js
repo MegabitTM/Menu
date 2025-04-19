@@ -54,15 +54,17 @@ async function initDB() {
 // Функция валидации данных
 function validateData(data) {
     try {
+        console.log('Начало валидации данных:', data);
+        
         // Проверка базовой структуры
         if (!data || typeof data !== 'object') {
-            console.error('Invalid data structure');
+            console.error('Неверная структура данных');
             return false;
         }
 
         // Проверка настроек
         if (!data.settings || typeof data.settings !== 'object') {
-            console.error('Invalid settings structure');
+            console.error('Неверная структура настроек');
             return false;
         }
 
@@ -70,45 +72,52 @@ function validateData(data) {
         const requiredSettings = ['headerLogo', 'logoSize', 'headerBgColor', 'serviceTip', 'theme', 'adminPassword'];
         for (const setting of requiredSettings) {
             if (!(setting in data.settings)) {
-                console.error(`Missing required setting: ${setting}`);
+                console.error(`Отсутствует обязательное поле настроек: ${setting}`);
                 return false;
             }
         }
 
         // Проверка категорий
         if (!data.categories || !Array.isArray(data.categories)) {
-            console.error('Invalid categories structure');
+            console.error('Неверная структура категорий');
             return false;
         }
 
         // Проверка каждой категории
         for (const category of data.categories) {
             if (!category || typeof category !== 'object') {
-                console.error('Invalid category structure');
+                console.error('Неверная структура категории');
                 return false;
             }
 
-            if (!category.id || !category.name) {
-                console.error('Category missing required fields');
+            if (!category.id) {
+                console.error('Категория не содержит id');
+                return false;
+            }
+
+            // Проверяем name, допуская как строки, так и числа
+            if (category.name === undefined || category.name === null) {
+                console.error('Категория не содержит name');
                 return false;
             }
         }
 
         // Проверка данных меню
         if (!data.menuData || typeof data.menuData !== 'object') {
-            console.error('Invalid menuData structure');
+            console.error('Неверная структура данных меню');
             return false;
         }
 
         // Проверка корзины (необязательная)
         if (data.cart !== undefined && !Array.isArray(data.cart)) {
-            console.error('Invalid cart structure');
+            console.error('Неверная структура корзины');
             return false;
         }
 
+        console.log('Данные прошли валидацию');
         return true;
     } catch (error) {
-        console.error('Error validating data:', error);
+        console.error('Ошибка при валидации данных:', error);
         return false;
     }
 }
@@ -150,8 +159,11 @@ async function saveData() {
 // Функция загрузки данных
 async function loadData() {
     try {
+        console.log('Начало загрузки данных...');
+        
         // Пробуем загрузить из IndexedDB
         if (!db) {
+            console.log('Инициализация базы данных...');
             db = await initDB();
         }
 
@@ -161,15 +173,18 @@ async function loadData() {
             const request = store.get('data');
             
             request.onsuccess = () => {
+                console.log('Данные из IndexedDB:', request.result);
                 resolve(request.result);
             };
             
             request.onerror = () => {
+                console.error('Ошибка при загрузке из IndexedDB:', request.error);
                 reject(request.error);
             };
         });
 
         if (data) {
+            console.log('Используем данные из IndexedDB');
             updateAppData(data);
             return;
         }
@@ -178,38 +193,46 @@ async function loadData() {
         const localStorageData = localStorage.getItem('appData');
         if (localStorageData) {
             try {
+                console.log('Пробуем загрузить из localStorage');
                 const parsedData = JSON.parse(localStorageData);
                 if (validateData(parsedData)) {
+                    console.log('Используем данные из localStorage');
                     updateAppData(parsedData);
                     return;
                 }
             } catch (e) {
-                console.error('Error parsing localStorage data:', e);
+                console.error('Ошибка при парсинге localStorage:', e);
             }
         }
 
         // Если ни в IndexedDB, ни в localStorage нет данных, загружаем из data.json
         try {
+            console.log('Пробуем загрузить из data.json');
             const response = await fetch('data.json');
             if (!response.ok) {
                 throw new Error('Failed to load data.json');
             }
             const jsonData = await response.json();
+            console.log('Данные из data.json:', jsonData);
+            
             if (validateData(jsonData)) {
+                console.log('Используем данные из data.json');
                 updateAppData(jsonData);
                 // Сохраняем загруженные данные в IndexedDB
                 await saveData();
                 return;
+            } else {
+                console.error('Данные из data.json не прошли валидацию');
             }
         } catch (e) {
-            console.error('Error loading data.json:', e);
+            console.error('Ошибка при загрузке data.json:', e);
         }
 
         // Если ничего не загрузилось, используем стандартные данные
-        console.log('Using default data');
+        console.log('Используем стандартные данные');
         updateAppData(appData);
     } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Ошибка при загрузке данных:', error);
         // В случае ошибки используем стандартные данные
         updateAppData(appData);
     }
@@ -217,6 +240,14 @@ async function loadData() {
 
 // Функция для обновления данных с автоматическим сохранением
 function updateAppData(newData) {
+    // Преобразуем числовые значения в строки для имен категорий
+    if (newData.categories) {
+        newData.categories = newData.categories.map(category => ({
+            ...category,
+            name: String(category.name)
+        }));
+    }
+
     // Обновляем appData
     appData = { ...appData, ...newData };
     
