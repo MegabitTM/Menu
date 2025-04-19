@@ -123,191 +123,6 @@
             transform: translateY(-2px);
         }
         @media (max-width: 768px) {
-            .filter-buttons {
-                flex-direction: column;
-            }
-            .filter-buttons button {
-                width: 100%;
-            }
-            .order-card {
-                margin: 10px 0;
-            }
-        }
-        .order-item {
-            background: #fff;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .order-id {
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-
-        .order-date {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .order-status {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            font-weight: bold;
-        }
-
-        .order-status.new {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .order-status.in_progress {
-            background: #fff3e0;
-            color: #f57c00;
-        }
-
-        .order-status.completed {
-            background: #e8f5e9;
-            color: #388e3c;
-        }
-
-        .order-status.cancelled {
-            background: #ffebee;
-            color: #d32f2f;
-        }
-
-        .order-items {
-            margin-bottom: 10px;
-        }
-
-        .order-item-detail {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px dashed #eee;
-        }
-
-        .order-footer {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-        }
-
-        .order-total {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .order-comment {
-            font-style: italic;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .order-actions button {
-            flex: 1;
-            border-radius: 25px;
-            padding: 8px 20px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .order-actions button.btn-danger {
-            background: linear-gradient(45deg, #dc3545, #ff4d4d);
-            border: none;
-        }
-
-        .order-actions button.btn-danger:hover {
-            background: linear-gradient(45deg, #c82333, #e63946);
-            transform: translateY(-2px);
-        }
-
-        .order-actions button.btn-primary {
-            background: linear-gradient(45deg, #0d6efd, #0a58ca);
-            border: none;
-        }
-
-        .order-actions button.btn-primary:hover {
-            background: linear-gradient(45deg, #0b5ed7, #084298);
-            transform: translateY(-2px);
-        }
-
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin: 5px 0;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .order-customer {
-            margin: 8px 0;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .customer-name {
-            font-weight: bold;
-            margin-right: 8px;
-        }
-
-        .customer-phone {
-            color: #888;
-        }
-
-        body.dark-theme .order-customer {
-            color: #bbb;
-        }
-
-        body.dark-theme .customer-phone {
-            color: #999;
-        }
-
-        .phone-number {
-            color: #28a745;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .phone-number:hover {
-            text-decoration: underline;
-        }
-
-        /* Мобильная адаптация */
-        @media (max-width: 768px) {
             .container {
                 padding: 10px;
             }
@@ -326,13 +141,16 @@
             }
 
             .filter-buttons {
-                flex-direction: column;
+                flex-direction: row;
+                flex-wrap: wrap;
                 gap: 5px;
             }
 
             .filter-buttons .btn {
-                width: 100%;
+                width: auto;
                 margin: 2px 0;
+                flex: 1;
+                min-width: 100px;
             }
 
             .order-item {
@@ -370,13 +188,16 @@
             }
 
             .order-actions {
-                flex-direction: column;
+                flex-direction: row;
                 gap: 5px;
+                flex-wrap: wrap;
             }
 
             .order-actions button {
-                width: 100%;
+                width: auto;
                 margin: 2px 0;
+                flex: 1;
+                min-width: 100px;
             }
 
             .order-customer {
@@ -671,13 +492,20 @@
             const ordersContainer = document.getElementById('orders-container');
             if (!ordersContainer) return;
 
-            // Сортируем заказы: новые сверху
+            // Сортируем заказы: новые сверху, затем по статусу и времени
             const sortedOrders = [...orders].sort((a, b) => {
+                // Новые заказы всегда сверху
                 if (a.status === 'new' && b.status !== 'new') return -1;
                 if (a.status !== 'new' && b.status === 'new') return 1;
-                if (a.status === 'preparing' && b.status !== 'preparing') return -1;
-                if (a.status !== 'preparing' && b.status === 'preparing') return 1;
-                return b.timestamp - a.timestamp; // Сортируем по timestamp
+                
+                // Затем сортируем по статусу
+                const statusOrder = { 'preparing': 1, 'ready': 2, 'completed': 3, 'cancelled': 4 };
+                if (statusOrder[a.status] !== statusOrder[b.status]) {
+                    return statusOrder[a.status] - statusOrder[b.status];
+                }
+                
+                // Внутри одного статуса сортируем по времени (новые сверху)
+                return b.timestamp - a.timestamp;
             });
 
             ordersContainer.innerHTML = '';
@@ -728,7 +556,7 @@
                         </div>
                         <div class="order-customer">
                             <span class="customer-name">${order.customerName}</span>
-                            <a href="tel:+993${order.customerPhone}" class="phone-number">${order.customerPhone}</a>
+                            <a href="tel:+993${order.customerPhone}" class="phone-number">+993${order.customerPhone}</a>
                         </div>
                         <div class="order-items">
                             ${order.items.map(item => `
