@@ -296,6 +296,15 @@
         body.dark-theme .customer-phone {
             color: #999;
         }
+
+        .phone-number {
+            color: #28a745;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .phone-number:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body class="light-theme">
@@ -607,7 +616,7 @@
                         </div>
                         <div class="order-customer">
                             <span class="customer-name">${order.customerName}</span>
-                            <span class="customer-phone">+993${order.customerPhone}</span>
+                            <a href="tel:+993${order.customerPhone}" class="phone-number">+993${order.customerPhone}</a>
                         </div>
                         <div class="order-items">
                             ${order.items.map(item => `

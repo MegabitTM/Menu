@@ -1874,7 +1874,7 @@ async function confirmOrder() {
             items: cart,
             total: total,
             customerName: name,
-            customerPhone: `+993${phone}`,
+            customerPhone: phone,
             comment: comment,
             status: 'new',
             timestamp: Math.floor(Date.now() / 1000),
