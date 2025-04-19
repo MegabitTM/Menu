@@ -61,16 +61,22 @@
             padding: 8px 20px;
             font-weight: 500;
             transition: all 0.3s;
+            position: relative;
         }
         .filter-buttons .btn:hover {
             transform: translateY(-2px);
         }
         .filter-buttons .badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
             font-size: 0.8em;
             padding: 0.35em 0.65em;
             border-radius: 10px;
             font-weight: 500;
             transition: all 0.3s;
+            min-width: 24px;
+            text-align: center;
         }
         .btn-outline-warning .badge {
             background-color: #ffc107 !important;
@@ -697,6 +703,35 @@
         // Автоматическое обновление каждые 5 секунд
         setInterval(loadOrders, 5000);
         });
+
+        // Инициализация звука уведомления
+        const notificationSound = new Audio('assets/sounds/notification.mp3');
+        
+        // Функция для воспроизведения звука
+        function playNotificationSound() {
+            try {
+                notificationSound.play().catch(error => {
+                    console.warn('Не удалось воспроизвести звук:', error);
+                });
+            } catch (error) {
+                console.warn('Ошибка при воспроизведении звука:', error);
+            }
+        }
+        
+        // В функции updateOrdersList добавляем воспроизведение звука для новых заказов
+        function updateOrdersList() {
+            const orders = Orders.getAll();
+            const newOrders = orders.filter(order => order.status === 'new');
+            const preparingOrders = orders.filter(order => order.status === 'preparing');
+            const readyOrders = orders.filter(order => order.status === 'ready');
+            
+            // Воспроизводим звук, если есть новые заказы
+            if (newOrders.length > 0) {
+                playNotificationSound();
+            }
+            
+            // ... existing code ...
+        }
     </script>
 </body>
 </html> 
