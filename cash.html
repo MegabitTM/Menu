@@ -364,13 +364,11 @@
             }
             
             try {
-                // Загружаем заказы из локального файла
-                const response = await fetch('orders.json');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                if (!Array.isArray(data)) {
+                // Получаем заказы из Orders
+                const orders = Orders.getAll();
+                console.log('Загружены заказы:', orders);
+                
+                if (!Array.isArray(orders)) {
                     throw new Error('Полученные данные не являются массивом');
                 }
                 
@@ -378,9 +376,15 @@
                 const startTimestamp = new Date(startDate).getTime() / 1000;
                 const endTimestamp = new Date(endDate + 'T23:59:59').getTime() / 1000;
                 
-                const filteredOrders = data.filter(order => {
+                const filteredOrders = orders.filter(order => {
+                    if (!order.timestamp) {
+                        console.warn('Заказ без timestamp:', order);
+                        return false;
+                    }
                     return order.timestamp >= startTimestamp && order.timestamp <= endTimestamp;
                 });
+                
+                console.log('Отфильтрованные заказы:', filteredOrders);
                 
                 // Обновляем статистику
                 updateStatistics(filteredOrders);
@@ -394,7 +398,7 @@
                 updateOrdersTable(filteredOrders);
                 
                 // Включаем кнопку экспорта
-                document.getElementById('export-btn').disabled = false;
+                document.getElementById('export-btn').disabled = filteredOrders.length === 0;
                 
             } catch (error) {
                 console.error('Ошибка при загрузке данных:', error);
@@ -410,22 +414,25 @@
                 `;
                 
                 // Сбрасываем статистику
-                document.getElementById('total-revenue').textContent = '0 TMT';
-                document.getElementById('total-orders').textContent = '0';
-                document.getElementById('average-order').textContent = '0 TMT';
-                document.getElementById('completed-orders').textContent = '0';
-                document.getElementById('shown-orders').textContent = '0';
-                document.getElementById('total-filtered-orders').textContent = '0';
-                
-                // Отключаем кнопку экспорта
-                document.getElementById('export-btn').disabled = true;
+                resetStatistics();
             }
+        }
+        
+        // Сброс статистики
+        function resetStatistics() {
+            document.getElementById('total-revenue').textContent = '0 TMT';
+            document.getElementById('total-orders').textContent = '0';
+            document.getElementById('average-order').textContent = '0 TMT';
+            document.getElementById('completed-orders').textContent = '0';
+            document.getElementById('shown-orders').textContent = '0';
+            document.getElementById('total-filtered-orders').textContent = '0';
+            document.getElementById('export-btn').disabled = true;
         }
         
         // Обновление статистики
         function updateStatistics(orders) {
             // Общая выручка
-            const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+            const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
             document.getElementById('total-revenue').textContent = formatMoney(totalRevenue);
             
             // Всего заказов
