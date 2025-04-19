@@ -458,15 +458,17 @@
         function loadOrders() {
             try {
                 const allOrders = Orders.getAll();
-                console.log('Все заказы из localStorage:', allOrders);
+                console.log('Все заказы из Orders:', allOrders);
                 
                 // Получаем текущую дату
                 const today = new Date();
-                const todayYear = today.getFullYear();
-                const todayMonth = today.getMonth();
-                const todayDate = today.getDate();
+                today.setHours(0, 0, 0, 0); // Устанавливаем начало дня
+                const todayTimestamp = Math.floor(today.getTime() / 1000);
+                const tomorrowTimestamp = todayTimestamp + 86400; // Добавляем 24 часа
                 
                 console.log('Сегодняшняя дата:', today);
+                console.log('Сегодняшний timestamp:', todayTimestamp);
+                console.log('Завтрашний timestamp:', tomorrowTimestamp);
                 
                 // Фильтруем заказы по дате и валидируем их
                 const todayOrders = allOrders.filter(order => {
@@ -480,8 +482,8 @@
                         }
                         
                         // Проверяем timestamp
-                        const orderDate = new Date(order.timestamp * 1000);
-                        console.log('Дата заказа:', orderDate);
+                        const orderTimestamp = order.timestamp;
+                        console.log('Timestamp заказа:', orderTimestamp);
                         
                         // Если заказ в работе (preparing), показываем его независимо от даты
                         if (order.status === 'preparing') {
@@ -490,9 +492,7 @@
                         }
                         
                         // Для остальных заказов проверяем дату
-                        const isToday = orderDate.getFullYear() === todayYear && 
-                                      orderDate.getMonth() === todayMonth && 
-                                      orderDate.getDate() === todayDate;
+                        const isToday = orderTimestamp >= todayTimestamp && orderTimestamp < tomorrowTimestamp;
                         console.log('Заказ за сегодня:', isToday);
                         return isToday;
                     } catch (error) {
@@ -501,7 +501,7 @@
                     }
                 });
                 
-                console.log('Отфильтрованные заказы:', todayOrders);
+                console.log('Отфильтрованные заказы за сегодня:', todayOrders);
                 
                 const filteredOrders = currentFilter === 'all' 
                     ? todayOrders 
