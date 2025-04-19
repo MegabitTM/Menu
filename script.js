@@ -161,7 +161,38 @@ async function loadData() {
     try {
         console.log('Начало загрузки данных...');
         
-        // Пробуем загрузить из IndexedDB
+        // Сначала пробуем загрузить из data.json
+        try {
+            console.log('Пробуем загрузить из data.json');
+            const response = await fetch('data.json');
+            console.log('Ответ от сервера:', response);
+            console.log('Статус ответа:', response.status);
+            console.log('Статус текст:', response.statusText);
+            
+            if (!response.ok) {
+                throw new Error(`Ошибка загрузки data.json: ${response.status} ${response.statusText}`);
+            }
+            
+            const jsonData = await response.json();
+            console.log('Данные из data.json:', jsonData);
+            console.log('Количество категорий:', jsonData.categories?.length);
+            console.log('Количество блюд:', Object.keys(jsonData.menuData || {}).length);
+            
+            if (validateData(jsonData)) {
+                console.log('Данные из data.json прошли валидацию');
+                updateAppData(jsonData);
+                // Сохраняем загруженные данные в IndexedDB
+                await saveData();
+                return;
+            } else {
+                console.error('Данные из data.json не прошли валидацию');
+            }
+        } catch (e) {
+            console.error('Ошибка при загрузке data.json:', e);
+            console.error('Стек ошибки:', e.stack);
+        }
+
+        // Если не удалось загрузить из data.json, пробуем IndexedDB
         if (!db) {
             console.log('Инициализация базы данных...');
             db = await initDB();
@@ -203,32 +234,6 @@ async function loadData() {
             } catch (e) {
                 console.error('Ошибка при парсинге localStorage:', e);
             }
-        }
-
-        // Если ни в IndexedDB, ни в localStorage нет данных, загружаем из data.json
-        try {
-            console.log('Пробуем загрузить из data.json');
-            const response = await fetch('data.json');
-            console.log('Ответ от сервера:', response);
-            
-            if (!response.ok) {
-                throw new Error(`Ошибка загрузки data.json: ${response.status} ${response.statusText}`);
-            }
-            
-            const jsonData = await response.json();
-            console.log('Данные из data.json:', jsonData);
-            
-            if (validateData(jsonData)) {
-                console.log('Данные из data.json прошли валидацию');
-                updateAppData(jsonData);
-                // Сохраняем загруженные данные в IndexedDB
-                await saveData();
-                return;
-            } else {
-                console.error('Данные из data.json не прошли валидацию');
-            }
-        } catch (e) {
-            console.error('Ошибка при загрузке data.json:', e);
         }
 
         // Если ничего не загрузилось, используем стандартные данные
