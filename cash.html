@@ -482,7 +482,7 @@
                     };
                 }
                 
-                dailyData[dateKey].revenue += order.total;
+                dailyData[dateKey].revenue += (order.total || 0);
                 dailyData[dateKey].count += 1;
             });
             
@@ -588,11 +588,16 @@
             const itemCounts = {};
             
             orders.forEach(order => {
+                if (!order.items || !Array.isArray(order.items)) {
+                    console.warn('Заказ без items:', order);
+                    return;
+                }
+                
                 order.items.forEach(item => {
                     if (!itemCounts[item.name]) {
                         itemCounts[item.name] = 0;
                     }
-                    itemCounts[item.name] += item.quantity;
+                    itemCounts[item.name] += (item.quantity || 0);
                 });
             });
             
@@ -716,9 +721,9 @@
                     <td>${index + 1}</td>
                     <td>${formatDate(orderDate)} ${formatTime(orderDate)}</td>
                     <td><span class="badge bg-${getStatusBadgeClass(order.status)}">${getStatusText(order.status)}</span></td>
-                    <td>${order.items.length} позиций</td>
+                    <td>${order.items ? order.items.length : 0} позиций</td>
                     <td>${order.comment || '-'}</td>
-                    <td>${formatMoney(order.total)}</td>
+                    <td>${formatMoney(order.total || 0)}</td>
                 `;
                 
                 tableBody.appendChild(row);
