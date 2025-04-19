@@ -1858,10 +1858,10 @@ async function confirmOrder() {
             return;
         }
 
-        // Проверяем формат номера телефона
-        const phoneRegex = /^\+993[0-9]{8}$/;
+        // Проверяем формат номера телефона (8 цифр)
+        const phoneRegex = /^[0-9]{8}$/;
         if (!phoneRegex.test(phone)) {
-            alert('Пожалуйста, введите корректный номер телефона в формате +993XXXXXXXX');
+            alert('Пожалуйста, введите 8 цифр номера телефона');
             return;
         }
 
@@ -1873,10 +1873,8 @@ async function confirmOrder() {
             id: `ORDER_${Date.now()}`,
             items: cart,
             total: total,
-            customer: {
-                name: name,
-                phone: phone
-            },
+            customerName: name,
+            customerPhone: `+993${phone}`,
             comment: comment,
             status: 'new',
             timestamp: Math.floor(Date.now() / 1000),
