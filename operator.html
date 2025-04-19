@@ -436,22 +436,22 @@
             
             // Обновляем статистику в карточках
             const statElements = {
-                'total-orders': stats.total,
-                'new-orders': stats.new,
+                    'total-orders': stats.total,
+                    'new-orders': stats.new,
                 'in-progress-orders': stats.preparing,
-                'completed-orders': stats.completed,
-                'cancelled-orders': stats.cancelled,
+                    'completed-orders': stats.completed,
+                    'cancelled-orders': stats.cancelled,
                 'total-amount': `${stats.totalAmount} TMT`
-            };
+                };
 
             Object.entries(statElements).forEach(([id, value]) => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = value;
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
                 } else {
                     console.warn(`Элемент с id ${id} не найден`);
-                }
-            });
+                    }
+                });
         }
 
         // Загрузка заказов
@@ -616,11 +616,11 @@
             // Находим заказ по ID
             const orderIndex = orders.findIndex(order => order.id === orderId);
             if (orderIndex === -1) {
-                console.error('Заказ не найден:', orderId);
+                    console.error('Заказ не найден:', orderId);
                 showNotification('Ошибка: заказ не найден', 'error');
-                return;
-            }
-            
+                    return;
+                }
+                
             // Обновляем статус заказа
             orders[orderIndex].status = newStatus;
             
@@ -633,8 +633,8 @@
                 updateStats();
                 loadOrders();
                 
-                // Показываем уведомление об успешном обновлении
-                showNotification(`Статус заказа успешно изменен на "${getStatusText(newStatus)}"`);
+                        // Показываем уведомление об успешном обновлении
+                        showNotification(`Статус заказа успешно изменен на "${getStatusText(newStatus)}"`);
             } catch (error) {
                 console.error('Ошибка при обновлении статуса заказа:', error);
                 showNotification('Ошибка при обновлении статуса заказа', 'error');

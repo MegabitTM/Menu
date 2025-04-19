@@ -33,20 +33,20 @@ const STORE_NAME = 'appData';
 async function initDB() {
     return new Promise((resolve, reject) => {
         // Создаем или открываем базу данных
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-        
-        request.onerror = () => reject(request.error);
-        
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            
+            request.onerror = () => reject(request.error);
+            
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME);
-            }
-        };
-        
-        request.onsuccess = () => {
-            db = request.result;
-            resolve(db);
+                    db.createObjectStore(STORE_NAME);
+                }
+            };
+            
+            request.onsuccess = () => {
+                db = request.result;
+                resolve(db);
         };
     });
 }
@@ -225,11 +225,11 @@ async function loadData() {
         if (localStorageData) {
             try {
                 console.log('Пробуем загрузить из localStorage');
-                const parsedData = JSON.parse(localStorageData);
-                if (validateData(parsedData)) {
+            const parsedData = JSON.parse(localStorageData);
+            if (validateData(parsedData)) {
                     console.log('Используем данные из localStorage');
-                    updateAppData(parsedData);
-                    return;
+                updateAppData(parsedData);
+                return;
                 }
             } catch (e) {
                 console.error('Ошибка при парсинге localStorage:', e);
@@ -242,7 +242,7 @@ async function loadData() {
     } catch (error) {
         console.error('Ошибка при загрузке данных:', error);
         // В случае ошибки используем стандартные данные
-        updateAppData(appData);
+            updateAppData(appData);
     }
 }
 
@@ -1842,7 +1842,29 @@ async function confirmOrder() {
             return;
         }
 
-        const comment = document.getElementById('order-comment').value;
+        // Получаем значения из формы
+        const name = document.getElementById('customer-name').value.trim();
+        const phone = document.getElementById('customer-phone').value.trim();
+        const comment = document.getElementById('order-comment').value.trim();
+
+        // Проверяем обязательные поля
+        if (!name) {
+            alert('Пожалуйста, введите ваше имя');
+            return;
+        }
+
+        if (!phone) {
+            alert('Пожалуйста, введите номер телефона');
+            return;
+        }
+
+        // Проверяем формат номера телефона
+        const phoneRegex = /^\+993[0-9]{8}$/;
+        if (!phoneRegex.test(phone)) {
+            alert('Пожалуйста, введите корректный номер телефона в формате +993XXXXXXXX');
+            return;
+        }
+
         const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
         // Сохраняем заказ в localStorage
@@ -1851,6 +1873,10 @@ async function confirmOrder() {
             id: `ORDER_${Date.now()}`,
             items: cart,
             total: total,
+            customer: {
+                name: name,
+                phone: phone
+            },
             comment: comment,
             status: 'new',
             timestamp: Math.floor(Date.now() / 1000),

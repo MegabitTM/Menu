@@ -859,19 +859,75 @@ input:checked + .slider:before {
     border-top: 1px solid #ddd;
 }
 
-.order-form label {
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
 }
 
-.order-form textarea {
+.form-group input,
+.form-group textarea {
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    margin-bottom: 15px;
-    resize: vertical;
+    font-size: 16px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.form-text {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #666;
+}
+
+body.dark-theme .form-group label {
+    color: #fff;
+}
+
+body.dark-theme .form-group input,
+body.dark-theme .form-group textarea {
+    background-color: #444;
+    border-color: #555;
+    color: #fff;
+}
+
+body.dark-theme .form-group input:focus,
+body.dark-theme .form-group textarea:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+}
+
+body.dark-theme .form-text {
+    color: #aaa;
+}
+
+/* Стили для невалидных полей */
+.form-group input:invalid {
+    border-color: #dc3545;
+}
+
+.form-group input:invalid:focus {
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
+body.dark-theme .form-group input:invalid {
+    border-color: #dc3545;
+}
+
+body.dark-theme .form-group input:invalid:focus {
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.3);
 }
 
 #send-order-btn {
