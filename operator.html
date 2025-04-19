@@ -616,7 +616,7 @@
                         </div>
                         <div class="order-customer">
                             <span class="customer-name">${order.customerName}</span>
-                            <a href="tel:+993${order.customerPhone}" class="phone-number">+993${order.customerPhone}</a>
+                            <a href="tel:+993${order.customerPhone}" class="phone-number">${order.customerPhone}</a>
                         </div>
                         <div class="order-items">
                             ${order.items.map(item => `
@@ -760,39 +760,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
             loadOrders();
-
-        // Автоматическое обновление каждые 5 секунд
-        setInterval(loadOrders, 5000);
         });
-
-        // Инициализация звука уведомления
-        const notificationSound = new Audio('assets/sounds/notification.mp3');
-        
-        // Функция для воспроизведения звука
-        function playNotificationSound() {
-            try {
-                notificationSound.play().catch(error => {
-                    console.warn('Не удалось воспроизвести звук:', error);
-                });
-            } catch (error) {
-                console.warn('Ошибка при воспроизведении звука:', error);
-            }
-        }
-        
-        // В функции updateOrdersList добавляем воспроизведение звука для новых заказов
-        function updateOrdersList() {
-            const orders = Orders.getAll();
-            const newOrders = orders.filter(order => order.status === 'new');
-            const preparingOrders = orders.filter(order => order.status === 'preparing');
-            const readyOrders = orders.filter(order => order.status === 'ready');
-            
-            // Воспроизводим звук, если есть новые заказы
-            if (newOrders.length > 0) {
-                playNotificationSound();
-            }
-            
-            // ... existing code ...
-        }
     </script>
 </body>
 </html> 
