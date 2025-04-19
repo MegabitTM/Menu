@@ -128,12 +128,14 @@
             }
 
             .stats-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
+                flex-wrap: nowrap;
+                gap: 5px;
+                padding-bottom: 5px;
             }
 
             .stat-card {
                 padding: 10px;
+                min-width: 120px;
             }
 
             .stat-value {
@@ -227,7 +229,14 @@
         /* Дополнительные улучшения для очень маленьких экранов */
         @media (max-width: 480px) {
             .stats-container {
-                grid-template-columns: 1fr;
+                flex-wrap: nowrap;
+                gap: 5px;
+                padding-bottom: 5px;
+            }
+
+            .stat-card {
+                padding: 10px;
+                min-width: 120px;
             }
 
             .stat-value {
@@ -237,6 +246,37 @@
             .order-items {
                 max-height: 120px;
             }
+        }
+
+        /* Стили для скроллбара */
+        .stats-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .stats-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .stats-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .stats-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        body.dark-theme .stats-container::-webkit-scrollbar-track {
+            background: #333;
+        }
+
+        body.dark-theme .stats-container::-webkit-scrollbar-thumb {
+            background: #666;
+        }
+
+        body.dark-theme .stats-container::-webkit-scrollbar-thumb:hover {
+            background: #888;
         }
     </style>
 </head>
