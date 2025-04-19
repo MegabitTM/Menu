@@ -83,8 +83,11 @@
                 </div>
                 <div class="form-group">
                     <label for="customer-phone">Номер телефона:</label>
-                    <input type="tel" id="customer-phone" placeholder="+993" required pattern="\+993[0-9]{8}">
-                    <small class="form-text">Формат: +993XXXXXXXX</small>
+                    <div class="phone-input">
+                        <span class="phone-prefix">+993</span>
+                        <input type="tel" id="customer-phone" placeholder="XXXXXXXX" required pattern="[0-9]{8}">
+                    </div>
+                    <small class="form-text">Введите 8 цифр номера</small>
                 </div>
                 <div class="form-group">
                     <label for="order-comment">Комментарий к заказу (необязательно):</label>

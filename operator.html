@@ -273,6 +273,29 @@
             color: #666;
             font-size: 0.9em;
         }
+
+        .order-customer {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .customer-name {
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .customer-phone {
+            color: #888;
+        }
+
+        body.dark-theme .order-customer {
+            color: #bbb;
+        }
+
+        body.dark-theme .customer-phone {
+            color: #999;
+        }
     </style>
 </head>
 <body class="light-theme">
@@ -581,6 +604,10 @@
                             <span class="order-id">Заказ №${orderCounter}</span>
                             <span class="order-date">${orderDate.toLocaleString('ru-RU')}</span>
                             <span class="order-status">${getStatusText(order.status)}</span>
+                        </div>
+                        <div class="order-customer">
+                            <span class="customer-name">${order.customerName}</span>
+                            <span class="customer-phone">+993${order.customerPhone}</span>
                         </div>
                         <div class="order-items">
                             ${order.items.map(item => `
