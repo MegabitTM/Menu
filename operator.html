@@ -428,16 +428,24 @@
             const stats = Orders.getStats();
             console.log('Получена статистика:', stats);
             
-            const statsContainer = document.getElementById('stats-container');
-            statsContainer.innerHTML = `
-                <p>Всего заказов: ${stats.total}</p>
-                <p>Новых: ${stats.new}</p>
-                <p>В приготовлении: ${stats.preparing}</p>
-                <p>Готовых: ${stats.ready}</p>
-                <p>Завершенных: ${stats.completed}</p>
-                <p>Отмененных: ${stats.cancelled}</p>
-                <p>Общая сумма: ${stats.totalAmount} TMT</p>
-            `;
+            // Обновляем статистику в карточках
+            const statElements = {
+                'total-orders': stats.total,
+                'new-orders': stats.new,
+                'in-progress-orders': stats.preparing,
+                'completed-orders': stats.completed,
+                'cancelled-orders': stats.cancelled,
+                'total-amount': `${stats.totalAmount} TMT`
+            };
+
+            Object.entries(statElements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
+                } else {
+                    console.warn(`Элемент с id ${id} не найден`);
+                }
+            });
         }
 
         // Загрузка заказов
