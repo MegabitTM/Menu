@@ -1,4 +1,5 @@
-// Базовые данные приложения
+// Удаляем дублирующиеся объявления переменных
+let modals;
 let appData = {
     cart: [],
     settings: {
@@ -31,45 +32,21 @@ const STORE_NAME = 'appData';
 
 async function initDB() {
     return new Promise((resolve, reject) => {
-        // Удаляем старую базу данных
-        const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+        // Создаем или открываем базу данных
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
         
-        deleteRequest.onsuccess = () => {
-            // Создаем новую базу данных
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
-            
-            request.onerror = () => reject(request.error);
-            
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
+        request.onerror = () => reject(request.error);
+        
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    db.createObjectStore(STORE_NAME);
-                }
-            };
-            
-            request.onsuccess = () => {
-                db = request.result;
-                resolve(db);
-            };
+                db.createObjectStore(STORE_NAME);
+            }
         };
         
-        deleteRequest.onerror = () => {
-            // Если не удалось удалить, пробуем просто открыть
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
-            
-            request.onerror = () => reject(request.error);
-            
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    db.createObjectStore(STORE_NAME);
-                }
-            };
-            
-            request.onsuccess = () => {
-                db = request.result;
-                resolve(db);
-            };
+        request.onsuccess = () => {
+            db = request.result;
+            resolve(db);
         };
     });
 }
@@ -200,34 +177,41 @@ async function loadData() {
         // Если в IndexedDB нет данных, пробуем загрузить из localStorage
         const localStorageData = localStorage.getItem('appData');
         if (localStorageData) {
-            const parsedData = JSON.parse(localStorageData);
-            if (validateData(parsedData)) {
-                updateAppData(parsedData);
-                return;
-            }
-        }
-
-        // Если нет данных нигде, используем дефолтные
-        updateAppData(appData);
-        
-    } catch (error) {
-        console.error('Error loading data:', error);
-        // В случае ошибки пробуем загрузить из localStorage
-        try {
-            const localStorageData = localStorage.getItem('appData');
-            if (localStorageData) {
+            try {
                 const parsedData = JSON.parse(localStorageData);
                 if (validateData(parsedData)) {
                     updateAppData(parsedData);
                     return;
                 }
+            } catch (e) {
+                console.error('Error parsing localStorage data:', e);
             }
-            // Если в localStorage тоже нет валидных данных, используем дефолтные
-            updateAppData(appData);
-        } catch (e) {
-            console.error('Error loading from localStorage:', e);
-            updateAppData(appData);
         }
+
+        // Если ни в IndexedDB, ни в localStorage нет данных, загружаем из data.json
+        try {
+            const response = await fetch('data.json');
+            if (!response.ok) {
+                throw new Error('Failed to load data.json');
+            }
+            const jsonData = await response.json();
+            if (validateData(jsonData)) {
+                updateAppData(jsonData);
+                // Сохраняем загруженные данные в IndexedDB
+                await saveData();
+                return;
+            }
+        } catch (e) {
+            console.error('Error loading data.json:', e);
+        }
+
+        // Если ничего не загрузилось, используем стандартные данные
+        console.log('Using default data');
+        updateAppData(appData);
+    } catch (error) {
+        console.error('Error loading data:', error);
+        // В случае ошибки используем стандартные данные
+        updateAppData(appData);
     }
 }
 
@@ -335,7 +319,7 @@ function hideProgress() {
 }
 
 // Добавляем обработчики закрытия модальных окон по клику вне их области
-const modals = [
+modals = [
     elements.cartModal,
     elements.editModal,
     elements.adminPanelModal,
