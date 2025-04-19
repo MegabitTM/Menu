@@ -424,94 +424,27 @@
 
         // Обновление статистики
         function updateStats() {
-            try {
-                const allOrders = Orders.getAll();
-                const today = new Date();
-                const todayYear = today.getFullYear();
-                const todayMonth = today.getMonth();
-                const todayDate = today.getDate();
-
-                // Фильтруем заказы за сегодня
-                const todayOrders = allOrders.filter(order => {
-                    try {
-                        let timestamp;
-                        if (order.timestamp) {
-                            timestamp = order.timestamp;
-                        } else {
-                            const idStr = String(order.id);
-                            if (idStr.includes('_')) {
-                                const parts = idStr.split('_');
-                                timestamp = parseInt(parts[parts.length - 1]);
-                            } else if (idStr.length === 13) {
-                                timestamp = Math.floor(parseInt(idStr) / 1000);
-                            } else {
-                                timestamp = parseInt(idStr);
-                            }
-                        }
-
-                        if (isNaN(timestamp) || timestamp <= 0) return false;
-                        
-                        const orderDate = new Date(timestamp * 1000);
-                        if (isNaN(orderDate.getTime())) return false;
-
-                        // Проверяем, что дата заказа не раньше 2020 года
-                        if (orderDate.getFullYear() < 2020) return false;
-
-                        // Проверяем, что дата заказа не позже чем через год от текущей даты
-                        const maxFutureDate = new Date();
-                        maxFutureDate.setFullYear(todayYear + 1);
-                        if (orderDate > maxFutureDate) return false;
-
-                        // Если заказ в работе (preparing), показываем его независимо от даты
-                        if (order.status === 'preparing') {
-                            return true;
-                        }
-
-                        return orderDate.getFullYear() === todayYear &&
-                               orderDate.getMonth() === todayMonth &&
-                               orderDate.getDate() === todayDate;
-                    } catch (error) {
-                        console.error('Ошибка при обработке заказа:', error, order);
-                        return false;
-                    }
-                });
-
-                // Подсчитываем статистику
-                const stats = {
-                    total: todayOrders.length,
-                    new: todayOrders.filter(o => o.status === 'new').length,
-                    inProgress: todayOrders.filter(o => o.status === 'preparing').length,
-                    completed: todayOrders.filter(o => o.status === 'completed').length,
-                    cancelled: todayOrders.filter(o => o.status === 'cancelled').length,
-                    totalAmount: todayOrders.reduce((sum, order) => sum + order.total, 0)
-                };
-
-                // Обновляем элементы статистики
-                const elements = {
-                    'total-orders': stats.total,
-                    'new-orders': stats.new,
-                    'in-progress-orders': stats.inProgress,
-                    'completed-orders': stats.completed,
-                    'cancelled-orders': stats.cancelled,
-                    'total-amount': stats.totalAmount.toFixed(2) + ' TMT'
-                };
-
-                Object.entries(elements).forEach(([id, value]) => {
-                    const element = document.getElementById(id);
-                    if (element) {
-                        element.textContent = value;
-                    }
-                });
-            } catch (error) {
-                console.error('Ошибка при обновлении статистики:', error);
-            }
+            console.log('Обновление статистики...');
+            const stats = Orders.getStats();
+            console.log('Получена статистика:', stats);
+            
+            const statsContainer = document.getElementById('stats-container');
+            statsContainer.innerHTML = `
+                <p>Всего заказов: ${stats.total}</p>
+                <p>Новых: ${stats.new}</p>
+                <p>В приготовлении: ${stats.preparing}</p>
+                <p>Готовых: ${stats.ready}</p>
+                <p>Завершенных: ${stats.completed}</p>
+                <p>Отмененных: ${stats.cancelled}</p>
+                <p>Общая сумма: ${stats.totalAmount} TMT</p>
+            `;
         }
 
         // Загрузка заказов
         function loadOrders() {
             try {
                 const allOrders = Orders.getAll();
-                console.log('Все заказы:', allOrders);
+                console.log('Все заказы из localStorage:', allOrders);
                 
                 // Получаем текущую дату
                 const today = new Date();
@@ -524,63 +457,37 @@
                 // Фильтруем заказы по дате и валидируем их
                 const todayOrders = allOrders.filter(order => {
                     try {
-                        let timestamp;
-                        if (order.timestamp) {
-                            timestamp = order.timestamp;
-                        } else {
-                            const idStr = String(order.id);
-                            if (idStr.includes('_')) {
-                                const parts = idStr.split('_');
-                                timestamp = parseInt(parts[parts.length - 1]);
-                            } else if (idStr.length === 13) {
-                                timestamp = Math.floor(parseInt(idStr) / 1000);
-                            } else {
-                                timestamp = parseInt(idStr);
-                            }
-                        }
+                        console.log('Обработка заказа:', order);
                         
-                        if (isNaN(timestamp) || timestamp <= 0) {
-                            console.warn('Некорректный timestamp в заказе:', order);
+                        // Проверяем наличие необходимых полей
+                        if (!order.id || !order.items || !order.total || !order.status) {
+                            console.warn('Заказ не содержит обязательных полей:', order);
                             return false;
                         }
                         
-                        const orderDate = new Date(timestamp * 1000);
-                        
-                        if (isNaN(orderDate.getTime())) {
-                            console.warn('Некорректная дата в заказе:', order);
-                            return false;
-                        }
-                        
-                        // Проверяем, что дата заказа не раньше 2020 года
-                        if (orderDate.getFullYear() < 2020) {
-                            console.warn('Дата заказа слишком старая:', order);
-                            return false;
-                        }
-                        
-                        // Проверяем, что дата заказа не позже чем через год от текущей даты
-                        const maxFutureDate = new Date();
-                        maxFutureDate.setFullYear(todayYear + 1);
-                        if (orderDate > maxFutureDate) {
-                            console.warn('Дата заказа слишком далеко в будущем:', order);
-                            return false;
-                        }
+                        // Проверяем timestamp
+                        const orderDate = new Date(order.timestamp * 1000);
+                        console.log('Дата заказа:', orderDate);
                         
                         // Если заказ в работе (preparing), показываем его независимо от даты
                         if (order.status === 'preparing') {
+                            console.log('Заказ в работе, показываем');
                             return true;
                         }
                         
                         // Для остальных заказов проверяем дату
-                        return orderDate.getFullYear() === todayYear && 
-                               orderDate.getMonth() === todayMonth && 
-                               orderDate.getDate() === todayDate;
+                        const isToday = orderDate.getFullYear() === todayYear && 
+                                      orderDate.getMonth() === todayMonth && 
+                                      orderDate.getDate() === todayDate;
+                        console.log('Заказ за сегодня:', isToday);
+                        return isToday;
                     } catch (error) {
                         console.error('Ошибка при обработке заказа:', error, order);
                         return false;
                     }
                 });
                 
-                console.log('Сегодняшние заказы:', todayOrders);
+                console.log('Отфильтрованные заказы:', todayOrders);
                 
                 const filteredOrders = currentFilter === 'all' 
                     ? todayOrders 
@@ -680,58 +587,18 @@
 
         // Обновление статуса заказа
         function updateOrderStatus(orderId, newStatus) {
-            try {
-                console.log('Обновление статуса заказа:', { orderId, newStatus });
-                
-                // Проверяем, что orderId является строкой
-                if (typeof orderId !== 'string') {
-                    orderId = String(orderId);
-                }
-                
-                // Проверяем, что заказ существует
-                const allOrders = Orders.getAll();
-                const order = allOrders.find(o => String(o.id) === orderId);
-                
-                if (!order) {
-                    console.error('Заказ не найден:', orderId);
-                    showNotification('Заказ не найден', 'error');
-                    return;
-                }
-                
-                console.log('Найден заказ:', order);
-                
-                // Разрешаем следующие переходы статусов:
-                // new -> preparing
-                // preparing -> ready
-                // ready -> completed
-                // любой статус -> cancelled
-                const validTransitions = {
-                    'new': ['preparing', 'cancelled'],
-                    'preparing': ['ready', 'cancelled'],
-                    'ready': ['completed', 'cancelled'],
-                    'completed': ['cancelled'],
-                    'cancelled': []
-                };
-                
-                if (validTransitions[order.status] && validTransitions[order.status].includes(newStatus)) {
-                    // Обновляем статус
-                    if (Orders.updateStatus(orderId, newStatus)) {
-                        console.log('Статус успешно обновлен');
-                        // Обновляем отображение заказов
-                        loadOrders();
-                        // Показываем уведомление об успешном обновлении
-                        showNotification(`Статус заказа успешно изменен на "${getStatusText(newStatus)}"`);
-                    } else {
-                        console.error('Ошибка при вызове Orders.updateStatus');
-                        showNotification('Ошибка при обновлении статуса заказа', 'error');
-                    }
-                } else {
-                    console.error('Некорректный переход статуса:', { current: order.status, new: newStatus });
-                    showNotification('Некорректный переход статуса', 'error');
-                }
-            } catch (error) {
-                console.error('Ошибка при обновлении статуса заказа:', error);
-                showNotification('Ошибка при обновлении статуса заказа: ' + error.message, 'error');
+            console.log(`Обновление статуса заказа ${orderId} на ${newStatus}`);
+            const success = Orders.updateStatus(orderId, newStatus);
+            console.log('Результат обновления:', success);
+            
+            if (success) {
+                updateStats();
+                loadOrders();
+                // Показываем уведомление об успешном обновлении
+                showNotification(`Статус заказа успешно изменен на "${getStatusText(newStatus)}"`);
+            } else {
+                console.error('Ошибка при вызове Orders.updateStatus');
+                showNotification('Ошибка при обновлении статуса заказа', 'error');
             }
         }
 

@@ -1848,20 +1848,24 @@ async function confirmOrder() {
         // Сохраняем заказ в localStorage
         const orders = JSON.parse(localStorage.getItem('orders') || '[]');
         const newOrder = {
-            id: Date.now(),
+            id: `ORDER_${Date.now()}`,
             items: cart,
             total: total,
             comment: comment,
             status: 'new',
+            timestamp: Math.floor(Date.now() / 1000),
             date: new Date().toISOString()
         };
+        
+        console.log('Сохранение нового заказа:', newOrder);
         orders.push(newOrder);
         localStorage.setItem('orders', JSON.stringify(orders));
+        console.log('Заказы после сохранения:', JSON.parse(localStorage.getItem('orders')));
 
         alert('Заказ успешно сохранен!');
-            clearCart();
-            hideConfirmOrderModal();
-            updateCartBadge();
+        clearCart();
+        hideConfirmOrderModal();
+        updateCartBadge();
     } catch (error) {
         console.error('Ошибка при сохранении заказа:', error);
         alert('Ошибка при сохранении заказа: ' + error.message);
