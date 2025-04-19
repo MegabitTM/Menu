@@ -481,8 +481,15 @@
                             return false;
                         }
                         
-                        // Проверяем timestamp
-                        const orderTimestamp = order.timestamp;
+                        // Получаем timestamp из ID заказа, если он не указан
+                        let orderTimestamp = order.timestamp;
+                        if (!orderTimestamp && order.id) {
+                            const idParts = order.id.split('_');
+                            if (idParts.length > 1) {
+                                orderTimestamp = Math.floor(parseInt(idParts[1]) / 1000);
+                            }
+                        }
+                        
                         console.log('Timestamp заказа:', orderTimestamp);
                         
                         // Если заказ в работе (preparing), показываем его независимо от даты
@@ -602,16 +609,34 @@
         // Обновление статуса заказа
         function updateOrderStatus(orderId, newStatus) {
             console.log(`Обновление статуса заказа ${orderId} на ${newStatus}`);
-            const success = Orders.updateStatus(orderId, newStatus);
-            console.log('Результат обновления:', success);
             
-            if (success) {
+            // Получаем текущие заказы
+            const orders = Orders.getAll();
+            
+            // Находим заказ по ID
+            const orderIndex = orders.findIndex(order => order.id === orderId);
+            if (orderIndex === -1) {
+                console.error('Заказ не найден:', orderId);
+                showNotification('Ошибка: заказ не найден', 'error');
+                return;
+            }
+            
+            // Обновляем статус заказа
+            orders[orderIndex].status = newStatus;
+            
+            // Сохраняем обновленные заказы
+            try {
+                Orders.saveAll(orders);
+                console.log('Статус заказа успешно обновлен');
+                
+                // Обновляем отображение
                 updateStats();
                 loadOrders();
+                
                 // Показываем уведомление об успешном обновлении
                 showNotification(`Статус заказа успешно изменен на "${getStatusText(newStatus)}"`);
-            } else {
-                console.error('Ошибка при вызове Orders.updateStatus');
+            } catch (error) {
+                console.error('Ошибка при обновлении статуса заказа:', error);
                 showNotification('Ошибка при обновлении статуса заказа', 'error');
             }
         }
