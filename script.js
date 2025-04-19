@@ -209,14 +209,17 @@ async function loadData() {
         try {
             console.log('Пробуем загрузить из data.json');
             const response = await fetch('data.json');
+            console.log('Ответ от сервера:', response);
+            
             if (!response.ok) {
-                throw new Error('Failed to load data.json');
+                throw new Error(`Ошибка загрузки data.json: ${response.status} ${response.statusText}`);
             }
+            
             const jsonData = await response.json();
             console.log('Данные из data.json:', jsonData);
             
             if (validateData(jsonData)) {
-                console.log('Используем данные из data.json');
+                console.log('Данные из data.json прошли валидацию');
                 updateAppData(jsonData);
                 // Сохраняем загруженные данные в IndexedDB
                 await saveData();
@@ -237,6 +240,16 @@ async function loadData() {
         updateAppData(appData);
     }
 }
+
+// Добавляем обработчик для отображения ошибок загрузки
+window.addEventListener('error', function(e) {
+    console.error('Ошибка загрузки ресурса:', e);
+});
+
+// Добавляем обработчик для отображения ошибок в Promise
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('Необработанная ошибка Promise:', e.reason);
+});
 
 // Функция для обновления данных с автоматическим сохранением
 function updateAppData(newData) {
@@ -1445,6 +1458,20 @@ function addCategory(catName) {
     renderAdminEditContent();
     renderAdminSettingsForm();
 }
+
+// Инициализация приложения
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('DOM загружен, начинаем инициализацию...');
+    try {
+        await loadData();
+        console.log('Данные загружены, обновляем интерфейс...');
+        renderMenu();
+        updateHeaderLogo();
+        console.log('Инициализация завершена');
+    } catch (error) {
+        console.error('Ошибка при инициализации:', error);
+    }
+});
 
 // Обработчики событий
 document.addEventListener("DOMContentLoaded", async () => {
